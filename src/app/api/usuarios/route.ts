@@ -1,32 +1,124 @@
-import { NextResponse } from 'next/server';
-import type { Usuario } from '@/types/usuario';
+import { NextRequest, NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase';
 
-// Datos de ejemplo - En producción, esto vendría de una base de datos
-const usuarios: Usuario[] = [
-  { id: 1, nombre: 'Juan Pérez', email: 'juan@ejemplo.com', rol: 'Administrador', edad: 30, status: 'Activo', genero: 'Masculino' },
-  { id: 2, nombre: 'María López', email: 'maria@ejemplo.com', rol: 'Usuario', edad: 25, status: 'Inactivo', genero: 'Femenino' },
-  { id: 3, nombre: 'Carlos Rodríguez', email: 'carlos@ejemplo.com', rol: 'Editor', edad: 28, status: 'Activo', genero: 'Masculino' },
-  { id: 4, nombre: 'Ana Martínez', email: 'ana@ejemplo.com', rol: 'Usuario', edad: 22, status: 'Activo', genero: 'Femenino' },
-];
-
-export async function GET() {
-  // Aquí iría la lógica para obtener usuarios de la base de datos
-  // Por ejemplo:
-  // const usuarios = await prisma.usuario.findMany();
-  
-  return NextResponse.json(usuarios);
+export async function GET(request: NextRequest) {
+  try {
+    // Obtener parámetros de la URL
+    const searchParams = request.nextUrl.searchParams;
+    const page = parseInt(searchParams.get('page') || '1');
+    const pageSize = parseInt(searchParams.get('pageSize') || '10');
+    const searchTerm = searchParams.get('search') || '';
+    const genero = searchParams.get('genero') || '';
+    const status = searchParams.get('status') || '';
+    const edadMin = searchParams.get('edadMin') ? parseInt(searchParams.get('edadMin') || '0') : null;
+    const edadMax = searchParams.get('edadMax') ? parseInt(searchParams.get('edadMax') || '100') : null;
+    
+    // Calcular el rango para Supabase
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+    
+    // Construir la consulta base
+    let query = supabase.from('users').select('*', { count: 'exact' });
+    
+    // Aplicar filtros
+    if (searchTerm) {
+      query = query.ilike('nombre', `%${searchTerm}%`);
+    }
+    
+    if (genero) {
+      query = query.eq('genero', genero);
+    }
+    
+    if (status) {
+      query = query.eq('status', status);
+    }
+    
+    if (edadMin !== null) {
+      query = query.gte('edad', edadMin);
+    }
+    
+    if (edadMax !== null) {
+      query = query.lte('edad', edadMax);
+    }
+    
+    // Obtener el total de registros para calcular el total de páginas
+    const { count, error: countError } = await query
+        // @ts-expect-error Supabase permite este uso aunque TypeScript no lo reconozca
+      .select('*', { count: 'exact', head: true });
+    
+    if (countError) {
+      console.error('Error al obtener el conteo de usuarios:', countError);
+      return NextResponse.json({ error: countError.message }, { status: 500 });
+    }
+    
+    // Reiniciar la consulta para obtener los datos
+    query = supabase.from('users').select('*');
+    
+    // Aplicar los mismos filtros nuevamente
+    if (searchTerm) {
+      query = query.ilike('nombre', `%${searchTerm}%`);
+    }
+    
+    if (genero) {
+      query = query.eq('genero', genero);
+    }
+    
+    if (status) {
+      query = query.eq('status', status);
+    }
+    
+    if (edadMin !== null) {
+      query = query.gte('edad', edadMin);
+    }
+    
+    if (edadMax !== null) {
+      query = query.lte('edad', edadMax);
+    }
+    
+    // Obtener los datos paginados
+    // @ts-xpect-error Supabase permite este uso aunque TypeScript no lo reconozca
+    const { data, error } = await query
+      .order('nombre', { ascending: true })
+      .range(from, to);
+    
+    if (error) {
+      console.error('Error al obtener usuarios:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    
+    // Devolver datos con metadatos de paginación
+    return NextResponse.json({
+      data,
+      pagination: {
+        total: count,
+        page,
+        pageSize,
+        totalPages: Math.ceil((count || 0) / pageSize)
+      }
+    });
+  } catch (error) {
+    console.error('Error inesperado:', error);
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
+  }
 }
 
-export async function POST(request: Request) {
-  const nuevoUsuario = await request.json();
-  
-  // Aquí iría la lógica para crear un usuario en la base de datos
-  // Por ejemplo:
-  // const usuario = await prisma.usuario.create({ data: nuevoUsuario });
-  
-  // Simulamos la creación asignando un ID
-  const usuario = { ...nuevoUsuario, id: usuarios.length + 1 };
-  usuarios.push(usuario);
-  
-  return NextResponse.json(usuario, { status: 201 });
+export async function POST(request: NextRequest) {
+  try {
+    const nuevoUsuario = await request.json();
+    
+    const { data, error } = await supabase
+      .from('users')
+      .insert([nuevoUsuario])
+      .select();
+    
+    if (error) {
+      console.error('Error al crear usuario:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    
+    return NextResponse.json(data[0], { status: 201 });
+  } catch (error) {
+    console.error('Error inesperado:', error);
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
+  }
 } 

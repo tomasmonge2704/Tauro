@@ -1,9 +1,10 @@
-export interface Usuario {
-  id: number;
+export type Usuario = {
+  id: string;
   nombre: string;
   email: string;
-  rol: string;
+  rol: number;
   edad: number;
   status: string;
   genero: string;
-} 
+  created_at?: string;
+}; 

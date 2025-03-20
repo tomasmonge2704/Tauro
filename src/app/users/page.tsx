@@ -1,22 +1,23 @@
 'use client';
 
-import { Layout, Table, Modal, Form, Input, Button, message, Space, Select } from 'antd';
+import { Layout, Table, Modal, Form, Input, Button, message, Space, Select, Pagination, Input as AntInput, Row, Col, Card, Slider, Tag, Popconfirm } from 'antd';
 import { NavBar } from '@/components/NavBar';
 import { useState, useEffect } from 'react';
-import { EditOutlined, DeleteOutlined, UserAddOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, UserAddOutlined, SearchOutlined, FilterOutlined, ClearOutlined } from '@ant-design/icons';
 import type { Usuario } from '@/types/usuario';
 import { ColumnsType } from 'antd/es/table';
-import { Key } from 'react';
+import { useTheme } from '@/context/ThemeContext';
 
 const { Content } = Layout;
 const { Option } = Select;
+const { Search } = AntInput;
 
 // Definir opciones para los selectores
 const OPCIONES_GENERO = [
-  { value: 'Masculino', label: 'Masculino' },
-  { value: 'Femenino', label: 'Femenino' },
+  { value: 'Hombre', label: 'Masculino' },
+  { value: 'Mujer', label: 'Femenino' },
   { value: 'No binario', label: 'No binario' },
-  { value: 'Prefiero no decir', label: 'Prefiero no decir' }
+  { value: 'Prefiere no decir', label: 'Prefiere no decir' }
 ];
 
 const OPCIONES_STATUS = [
@@ -25,31 +26,155 @@ const OPCIONES_STATUS = [
   { value: 'Pendiente', label: 'Pendiente' }
 ];
 
+// Interfaz para los datos de paginación
+interface PaginationData {
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+// Interfaz para los filtros
+interface Filtros {
+  search: string;
+  genero: string;
+  status: string;
+  edadMin: number | null;
+  edadMax: number | null;
+}
+
 export default function UsersPage() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [usuarioEditando, setUsuarioEditando] = useState<Usuario | null>(null);
   const [loading, setLoading] = useState(true);
   const [modalCrearVisible, setModalCrearVisible] = useState(false);
+  const [filtrosVisibles, setFiltrosVisibles] = useState(false);
   const [form] = Form.useForm();
+  const [formFiltros] = Form.useForm();
+  const { themeMode } = useTheme();
+  
+  // Estado para los filtros
+  const [filtros, setFiltros] = useState<Filtros>({
+    search: '',
+    genero: '',
+    status: '',
+    edadMin: null,
+    edadMax: null
+  });
+  
+  // Estado para la paginación
+  const [pagination, setPagination] = useState<PaginationData>({
+    total: 0,
+    page: 1,
+    pageSize: 10,
+    totalPages: 0
+  });
 
-  // Cargar usuarios al montar el componente
+  // Cargar usuarios al montar el componente o cuando cambian los filtros o la paginación
   useEffect(() => {
-    fetchUsuarios();
-  }, []);
+    fetchUsuarios(pagination.page, pagination.pageSize, filtros);
+  }, [pagination.page, pagination.pageSize, filtros]);
 
-  const fetchUsuarios = async () => {
+  const fetchUsuarios = async (page: number, pageSize: number, filtros: Filtros) => {
     try {
       setLoading(true);
-      const response = await fetch('/api/usuarios');
+      
+      // Construir los parámetros de consulta
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+      params.append('pageSize', pageSize.toString());
+      
+      if (filtros.search) {
+        params.append('search', filtros.search);
+      }
+      
+      if (filtros.genero) {
+        params.append('genero', filtros.genero);
+      }
+      
+      if (filtros.status) {
+        params.append('status', filtros.status);
+      }
+      
+      if (filtros.edadMin !== null) {
+        params.append('edadMin', filtros.edadMin.toString());
+      }
+      
+      if (filtros.edadMax !== null) {
+        params.append('edadMax', filtros.edadMax.toString());
+      }
+      
+      const response = await fetch(`/api/usuarios?${params.toString()}`);
+      
       if (!response.ok) throw new Error('Error al cargar usuarios');
-      const data = await response.json();
-      setUsuarios(data);
+      
+      const result = await response.json();
+      
+      setUsuarios(result.data);
+      setPagination(result.pagination);
     } catch (error) {
       console.error('Error:', error);
       message.error('No se pudieron cargar los usuarios');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageChange = (page: number, pageSize?: number) => {
+    setPagination(prev => ({
+      ...prev,
+      page,
+      pageSize: pageSize || prev.pageSize
+    }));
+  };
+
+  const handleSearch = (value: string) => {
+    setFiltros(prev => ({
+      ...prev,
+      search: value
+    }));
+    // Resetear a la primera página cuando se realiza una búsqueda
+    setPagination(prev => ({
+      ...prev,
+      page: 1
+    }));
+  };
+  
+  const toggleFiltros = () => {
+    setFiltrosVisibles(!filtrosVisibles);
+  };
+  
+  const aplicarFiltros = (values: Usuario) => {
+    setFiltros(prev => ({
+      ...prev,
+      genero: values.genero || '',
+      status: values.status || '',
+      edadMin: Array.isArray(values.edad) ? values.edad[0] : null,
+      edadMax: Array.isArray(values.edad) ? values.edad[1] : null
+    }));
+    
+    // Resetear a la primera página cuando se aplican filtros
+    setPagination(prev => ({
+      ...prev,
+      page: 1
+    }));
+  };
+  
+  const limpiarFiltros = () => {
+    formFiltros.resetFields();
+    setFiltros({
+      search: filtros.search, // Mantener la búsqueda por texto
+      genero: '',
+      status: '',
+      edadMin: null,
+      edadMax: null
+    });
+    
+    // Resetear a la primera página
+    setPagination(prev => ({
+      ...prev,
+      page: 1
+    }));
   };
 
   const handleEdit = (usuario: Usuario) => {
@@ -60,18 +185,31 @@ export default function UsersPage() {
     if (!usuarioEditando) return;
     
     try {
+      setLoading(true);
+      // Convertir el rol a número antes de enviarlo
+      const updatedValues = {
+        ...values,
+        rol: values.rol ? Number(values.rol) : 0, 
+        edad: values.edad ? Number(values.edad) : 0,
+      };
       const response = await fetch(`/api/usuarios/${usuarioEditando.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify(updatedValues),
       });
       
-      if (!response.ok) throw new Error('Error al actualizar usuario');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al actualizar usuario');
+      }
       
       const usuarioActualizado = await response.json();
       
+      setUsuarioEditando(null);
+      
+      // Actualizar la lista de usuarios
       setUsuarios(prevUsuarios =>
         prevUsuarios.map(usuario =>
           usuario.id === usuarioActualizado.id ? usuarioActualizado : usuario
@@ -79,10 +217,11 @@ export default function UsersPage() {
       );
       
       message.success('Usuario actualizado correctamente');
-      setUsuarioEditando(null);
     } catch (error) {
       console.error('Error:', error);
-      message.error('No se pudo actualizar el usuario');
+      message.error(`No se pudo actualizar el usuario: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -90,33 +229,42 @@ export default function UsersPage() {
     setUsuarioEditando(null);
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     try {
+      setLoading(true);
       const response = await fetch(`/api/usuarios/${id}`, {
         method: 'DELETE',
       });
       
-      if (!response.ok) throw new Error('Error al eliminar usuario');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al eliminar usuario');
+      }
       
+      // Eliminar el usuario de la lista actual
       setUsuarios(prevUsuarios => prevUsuarios.filter(usuario => usuario.id !== id));
+      
+      // Si después de eliminar un usuario la página queda vacía y no es la primera página,
+      // ir a la página anterior
+      if (usuarios.length === 1 && pagination.page > 1) {
+        handlePageChange(pagination.page - 1);
+      } else {
+        // Recargar la página actual para mantener la consistencia
+        fetchUsuarios(pagination.page, pagination.pageSize, filtros);
+      }
+      
       message.success('Usuario eliminado correctamente');
     } catch (error) {
       console.error('Error:', error);
-      message.error('No se pudo eliminar el usuario');
+      message.error(`No se pudo eliminar el usuario: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const showCrearModal = () => {
-    form.resetFields();
-    setModalCrearVisible(true);
-  };
-
-  const handleCrearCancel = () => {
-    setModalCrearVisible(false);
-  };
-
-  const handleCrearUsuario = async (values: Omit<Usuario, 'id'>) => {
+  const handleCrearUsuario = async (values: Partial<Usuario>) => {
     try {
+      setLoading(true);
       const response = await fetch('/api/usuarios', {
         method: 'POST',
         headers: {
@@ -125,25 +273,36 @@ export default function UsersPage() {
         body: JSON.stringify(values),
       });
       
-      if (!response.ok) throw new Error('Error al crear usuario');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al crear usuario');
+      }
       
-      const nuevoUsuario = await response.json();
+      // Recargar la primera página después de crear un usuario
+      fetchUsuarios(1, pagination.pageSize, filtros);
       
-      setUsuarios(prevUsuarios => [...prevUsuarios, nuevoUsuario]);
       message.success('Usuario creado correctamente');
       setModalCrearVisible(false);
+      form.resetFields();
     } catch (error) {
       console.error('Error:', error);
       message.error('No se pudo crear el usuario');
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Definición de columnas para la tabla
+  const handleCrearCancel = () => {
+    setModalCrearVisible(false);
+    form.resetFields();
+  };
+
   const columnas: ColumnsType<Usuario> = [
     {
       title: 'Nombre',
       dataIndex: 'nombre',
       key: 'nombre',
+      sorter: (a: Usuario, b: Usuario) => a.nombre.localeCompare(b.nombre),
     },
     {
       title: 'Email',
@@ -151,77 +310,216 @@ export default function UsersPage() {
       key: 'email',
     },
     {
+      title: 'Edad',
+      dataIndex: 'edad',
+      key: 'edad',
+      sorter: (a: Usuario, b: Usuario) => a.edad - b.edad,
+    },
+    {
       title: 'Genero',
       dataIndex: 'genero',
       key: 'genero',
-      filters: [
-        { text: 'Masculino', value: 'Masculino' },
-        { text: 'Femenino', value: 'Femenino' },
-      ],
-      onFilter: (value: boolean | Key, record: Usuario) => 
-        record.genero.includes(String(value)),
+      render: (genero: string) => {
+        let color = 'blue';
+        if (genero === 'Mujer') color = 'pink';
+        if (genero === 'No binario') color = 'purple';
+        if (genero === 'Prefiere no decir') color = 'gray';
+        return <Tag color={color}>{genero}</Tag>;
+      },
       sorter: (a: Usuario, b: Usuario) => a.genero.localeCompare(b.genero),
     },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      filters: [
-        { text: 'Activo', value: 'Activo' },
-        { text: 'Inactivo', value: 'Inactivo' },
-      ],
-      onFilter: (value: boolean | Key, record: Usuario) => 
-        record.status.includes(String(value)),
+      render: (status: string) => {
+        let color = 'green';
+        if (status === 'Inactivo') color = 'red';
+        if (status === 'Pendiente') color = 'orange';
+        return <Tag color={color}>{status}</Tag>;
+      },
       sorter: (a: Usuario, b: Usuario) => a.status.localeCompare(b.status),
     },
     {
       title: 'Acciones',
       key: 'acciones',
-      render: (_: string, record: Usuario) => (
-        <span>
-          <Button
-            type="primary"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-            style={{ marginRight: 8 }}
-          />
-          <Button
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.id)}
-          />
-        </span>
-      ),
-    }
-  ];
-
-  return (
-    <Layout style={{ backgroundColor: 'white', minHeight: '100vh' }}>
-      <NavBar title="Usuarios" />
-      <Content style={{ padding: '20px' }}>
-        <Space style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
+      render: (_, record) => (
+        <Space size="middle">
           <Button 
             type="primary" 
-            icon={<UserAddOutlined />} 
-            onClick={showCrearModal}
+            icon={<EditOutlined />} 
+            onClick={() => handleEdit(record)}
+            size="small"
+          />
+          <Popconfirm
+            title="¿Estás seguro de eliminar este usuario?"
+            onConfirm={() => handleDelete(record.id)}
+            okText="Sí"
+            cancelText="No"
           >
-            Agregar Usuario
-          </Button>
+            <Button 
+              type="primary" 
+              danger 
+              icon={<DeleteOutlined />} 
+              size="small"
+            />
+          </Popconfirm>
         </Space>
+      ),
+    },
+  ];
+
+  // Renderizar los filtros activos como tags
+  const renderFiltrosActivos = () => {
+    const tags = [];
+    
+    if (filtros.genero) {
+      tags.push(
+        <Tag key="genero" closable onClose={() => setFiltros(prev => ({ ...prev, genero: '' }))}>
+          Género: {filtros.genero}
+        </Tag>
+      );
+    }
+    
+    if (filtros.status) {
+      tags.push(
+        <Tag key="status" closable onClose={() => setFiltros(prev => ({ ...prev, status: '' }))}>
+          Status: {filtros.status}
+        </Tag>
+      );
+    }
+    
+    if (filtros.edadMin !== null || filtros.edadMax !== null) {
+      tags.push(
+        <Tag key="edad" closable onClose={() => setFiltros(prev => ({ ...prev, edadMin: null, edadMax: null }))}>
+          Edad: {filtros.edadMin || 0} - {filtros.edadMax || 100}
+        </Tag>
+      );
+    }
+    
+    return tags.length > 0 ? (
+      <div style={{ marginBottom: 16 }}>
+        <span style={{ marginRight: 8 }}>Filtros activos:</span>
+        {tags}
+        {tags.length > 0 && (
+          <Button size="small" onClick={limpiarFiltros} icon={<ClearOutlined />} style={{ marginLeft: 8 }}>
+            Limpiar todos
+          </Button>
+        )}
+      </div>
+    ) : null;
+  };
+
+  return (
+    <Layout style={{ backgroundColor: themeMode === 'dark' ? '#141414' : '#f0f2f5', minHeight: '100vh' }}>
+      <NavBar title="Usuarios" />
+      <Content style={{ padding: '20px' }}>
+        <Space style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+          <Search
+            placeholder="Buscar por nombre"
+            allowClear
+            enterButton={<SearchOutlined />}
+            size="middle"
+            onSearch={handleSearch}
+            style={{ width: 300 }}
+          />
+          <Space>
+            <Button 
+              onClick={toggleFiltros}
+              icon={<FilterOutlined />}
+              type={filtrosVisibles ? "primary" : "default"}
+            >
+              Filtros
+            </Button>
+            <Button 
+              type="primary" 
+              icon={<UserAddOutlined />} 
+              onClick={() => setModalCrearVisible(true)}
+            >
+              Agregar Usuario
+            </Button>
+          </Space>
+        </Space>
+        
+        {filtrosVisibles && (
+          <Card style={{ marginBottom: 16 }}>
+            <Form
+              form={formFiltros}
+              layout="vertical"
+              onFinish={aplicarFiltros}
+              initialValues={{
+                genero: filtros.genero,
+                status: filtros.status,
+                edad: filtros.edadMin !== null && filtros.edadMax !== null ? [filtros.edadMin, filtros.edadMax] : undefined
+              }}
+            >
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Form.Item name="genero" label="Género">
+                    <Select placeholder="Selecciona un género" allowClear>
+                      {OPCIONES_GENERO.map(opcion => (
+                        <Option key={opcion.value} value={opcion.value}>{opcion.label}</Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item name="status" label="Status">
+                    <Select placeholder="Selecciona un status" allowClear>
+                      {OPCIONES_STATUS.map(opcion => (
+                        <Option key={opcion.value} value={opcion.value}>{opcion.label}</Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item name="edad" label="Rango de edad">
+                    <Slider range min={0} max={100} />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row justify="end">
+                <Space>
+                  <Button onClick={limpiarFiltros}>
+                    Limpiar
+                  </Button>
+                  <Button type="primary" htmlType="submit">
+                    Aplicar filtros
+                  </Button>
+                </Space>
+              </Row>
+            </Form>
+          </Card>
+        )}
+        
+        {renderFiltrosActivos()}
         
         <Table
           dataSource={usuarios} 
           columns={columnas} 
           rowKey="id" 
-          pagination={{ pageSize: 10 }}
+          pagination={false} // Desactivamos la paginación de la tabla
           loading={loading}
           style={{ boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}
         />
         
+        {/* Componente de paginación personalizado */}
+        <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end' }}>
+          <Pagination
+            current={pagination.page}
+            pageSize={pagination.pageSize}
+            total={pagination.total}
+            onChange={handlePageChange}
+            showSizeChanger
+            pageSizeOptions={['5', '10', '20', '50']}
+            showTotal={(total, range) => `${range[0]}-${range[1]} de ${total} usuarios`}
+          />
+        </div>
+        
         {/* Modal para editar usuario */}
         {usuarioEditando && (
           <Modal
-            title="Editar Invitado"
+            title="Editar Usuario"
             open={true}
             onCancel={handleCancel}
             footer={null}
@@ -238,7 +536,7 @@ export default function UsersPage() {
                 <Input />
               </Form.Item>
               <Form.Item name="rol" label="Rol">
-                <Input />
+                <Input type="number" />
               </Form.Item>
               <Form.Item name="edad" label="Edad">
                 <Input type="number" />
@@ -258,7 +556,7 @@ export default function UsersPage() {
                 </Select>
               </Form.Item>
               <Form.Item>
-                <Button type="primary" htmlType="submit">
+                <Button type="primary" htmlType="submit" loading={loading}>
                   Guardar
                 </Button>
                 <Button onClick={handleCancel} style={{ marginLeft: '8px' }}>
@@ -271,7 +569,7 @@ export default function UsersPage() {
         
         {/* Modal para crear usuario */}
         <Modal
-          title="Agregar Invitado"
+          title="Agregar Usuario"
           open={modalCrearVisible}
           onCancel={handleCrearCancel}
           footer={null}
@@ -287,8 +585,8 @@ export default function UsersPage() {
             <Form.Item name="email" label="Email" rules={[{ required: true, message: 'Por favor ingresa el email', type: 'email' }]}>
               <Input />
             </Form.Item>
-            <Form.Item name="rol" label="Rol" initialValue="Invitado">
-              <Input />
+            <Form.Item name="rol" label="Rol" initialValue={0}>
+              <Input type="number" />
             </Form.Item>
             <Form.Item name="edad" label="Edad" initialValue={25}>
               <Input type="number" />
@@ -308,7 +606,7 @@ export default function UsersPage() {
               </Select>
             </Form.Item>
             <Form.Item>
-              <Button type="primary" htmlType="submit">
+              <Button type="primary" htmlType="submit" loading={loading}>
                 Crear
               </Button>
               <Button onClick={handleCrearCancel} style={{ marginLeft: '8px' }}>
