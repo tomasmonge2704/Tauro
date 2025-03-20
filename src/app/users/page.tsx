@@ -1,9 +1,9 @@
 'use client';
 
-import { Layout, Table, Modal, Form, Input, Button, message, Space, Select, Pagination, Input as AntInput, Row, Col, Card, Slider, Tag, Popconfirm } from 'antd';
+import { Layout, Table, Modal, Form, Input, Button, message, Space, Select, Pagination, Input as AntInput, Row, Col, Card, Slider, Tag, Popconfirm, Badge, Tooltip } from 'antd';
 import { NavBar } from '@/components/NavBar';
 import { useState, useEffect } from 'react';
-import { EditOutlined, DeleteOutlined, UserAddOutlined, SearchOutlined, FilterOutlined, ClearOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, UserAddOutlined, SearchOutlined, FilterOutlined, ClearOutlined, WarningOutlined } from '@ant-design/icons';
 import type { Usuario } from '@/types/usuario';
 import { ColumnsType } from 'antd/es/table';
 import { useTheme } from '@/context/ThemeContext';
@@ -26,6 +26,16 @@ const OPCIONES_STATUS = [
   { value: 'Pendiente', label: 'Pendiente' }
 ];
 
+// Opciones para grupos
+const OPCIONES_GRUPO = [
+  { value: 'Administración', label: 'Administración' },
+  { value: 'Ventas', label: 'Ventas' },
+  { value: 'Marketing', label: 'Marketing' },
+  { value: 'Desarrollo', label: 'Desarrollo' },
+  { value: 'Soporte', label: 'Soporte' },
+  { value: 'Recursos Humanos', label: 'Recursos Humanos' }
+];
+
 // Interfaz para los datos de paginación
 interface PaginationData {
   total: number;
@@ -39,6 +49,7 @@ interface Filtros {
   search: string;
   genero: string;
   status: string;
+  grupo: string;
   edadMin: number | null;
   edadMax: number | null;
 }
@@ -52,12 +63,14 @@ export default function UsersPage() {
   const [form] = Form.useForm();
   const [formFiltros] = Form.useForm();
   const { themeMode } = useTheme();
+  const [emailVaciosCount, setEmailVaciosCount] = useState<number>(0);
   
   // Estado para los filtros
   const [filtros, setFiltros] = useState<Filtros>({
     search: '',
     genero: '',
     status: '',
+    grupo: '',
     edadMin: null,
     edadMax: null
   });
@@ -73,6 +86,7 @@ export default function UsersPage() {
   // Cargar usuarios al montar el componente o cuando cambian los filtros o la paginación
   useEffect(() => {
     fetchUsuarios(pagination.page, pagination.pageSize, filtros);
+    fetchEmailVaciosCount();
   }, [pagination.page, pagination.pageSize, filtros]);
 
   const fetchUsuarios = async (page: number, pageSize: number, filtros: Filtros) => {
@@ -96,6 +110,10 @@ export default function UsersPage() {
         params.append('status', filtros.status);
       }
       
+      if (filtros.grupo) {
+        params.append('grupo', filtros.grupo);
+      }
+      
       if (filtros.edadMin !== null) {
         params.append('edadMin', filtros.edadMin.toString());
       }
@@ -117,6 +135,21 @@ export default function UsersPage() {
       message.error('No se pudieron cargar los usuarios');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Función para obtener el conteo de usuarios con email vacío
+  const fetchEmailVaciosCount = async () => {
+    try {
+      const response = await fetch('/api/usuarios/count-empty-email');
+      
+      if (!response.ok) throw new Error('Error al obtener conteo de emails vacíos');
+      
+      const data = await response.json();
+      setEmailVaciosCount(data.count || 0);
+    } catch (error) {
+      console.error('Error:', error);
+      message.error('No se pudo obtener el conteo de emails vacíos');
     }
   };
 
@@ -149,6 +182,7 @@ export default function UsersPage() {
       ...prev,
       genero: values.genero || '',
       status: values.status || '',
+      grupo: values.grupo || '',
       edadMin: Array.isArray(values.edad) ? values.edad[0] : null,
       edadMax: Array.isArray(values.edad) ? values.edad[1] : null
     }));
@@ -166,6 +200,7 @@ export default function UsersPage() {
       search: filtros.search, // Mantener la búsqueda por texto
       genero: '',
       status: '',
+      grupo: '',
       edadMin: null,
       edadMax: null
     });
@@ -305,9 +340,21 @@ export default function UsersPage() {
       sorter: (a: Usuario, b: Usuario) => a.nombre.localeCompare(b.nombre),
     },
     {
-      title: 'Email',
+      title: () => (
+        <Space>
+          Email
+          {emailVaciosCount > 0 && (
+            <Tooltip title={`${emailVaciosCount} usuarios con email vacío`}>
+              <Badge count={emailVaciosCount} overflowCount={999} style={{ backgroundColor: '#faad14' }}>
+                <WarningOutlined style={{ color: '#faad14' }} />
+              </Badge>
+            </Tooltip>
+          )}
+        </Space>
+      ),
       dataIndex: 'email',
       key: 'email',
+      sorter: (a, b) => (a.email || '').localeCompare(b.email || '')
     },
     {
       title: 'Edad',
@@ -341,6 +388,17 @@ export default function UsersPage() {
       sorter: (a: Usuario, b: Usuario) => a.status.localeCompare(b.status),
     },
     {
+      title: 'Grupo',
+      dataIndex: 'grupo',
+      key: 'grupo',
+      render: (grupo: string) => (
+        <Tag color={getGrupoColor(grupo)}>
+          {grupo || 'Sin asignar'}
+        </Tag>
+      ),
+      sorter: (a, b) => (a.grupo || '').localeCompare(b.grupo || '')
+    },
+    {
       title: 'Acciones',
       key: 'acciones',
       render: (_, record) => (
@@ -369,6 +427,26 @@ export default function UsersPage() {
     },
   ];
 
+  // Función para obtener el color del tag según el grupo
+  const getGrupoColor = (grupo: string): string => {
+    switch (grupo) {
+      case 'Administración':
+        return 'blue';
+      case 'Ventas':
+        return 'green';
+      case 'Marketing':
+        return 'purple';
+      case 'Desarrollo':
+        return 'cyan';
+      case 'Soporte':
+        return 'orange';
+      case 'Recursos Humanos':
+        return 'pink';
+      default:
+        return 'default';
+    }
+  };
+
   // Renderizar los filtros activos como tags
   const renderFiltrosActivos = () => {
     const tags = [];
@@ -385,6 +463,14 @@ export default function UsersPage() {
       tags.push(
         <Tag key="status" closable onClose={() => setFiltros(prev => ({ ...prev, status: '' }))}>
           Status: {filtros.status}
+        </Tag>
+      );
+    }
+    
+    if (filtros.grupo) {
+      tags.push(
+        <Tag key="grupo" closable onClose={() => setFiltros(prev => ({ ...prev, grupo: '' }))}>
+          Grupo: {filtros.grupo}
         </Tag>
       );
     }
@@ -450,6 +536,7 @@ export default function UsersPage() {
               initialValues={{
                 genero: filtros.genero,
                 status: filtros.status,
+                grupo: filtros.grupo,
                 edad: filtros.edadMin !== null && filtros.edadMax !== null ? [filtros.edadMin, filtros.edadMax] : undefined
               }}
             >
@@ -467,6 +554,19 @@ export default function UsersPage() {
                   <Form.Item name="status" label="Status">
                     <Select placeholder="Selecciona un status" allowClear>
                       {OPCIONES_STATUS.map(opcion => (
+                        <Option key={opcion.value} value={opcion.value}>{opcion.label}</Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item name="grupo" label="Grupo">
+                    <Select 
+                      placeholder="Selecciona un grupo" 
+                      allowClear
+                      style={{ width: '100%' }}
+                    >
+                      {OPCIONES_GRUPO.map(opcion => (
                         <Option key={opcion.value} value={opcion.value}>{opcion.label}</Option>
                       ))}
                     </Select>
@@ -555,6 +655,13 @@ export default function UsersPage() {
                   ))}
                 </Select>
               </Form.Item>
+              <Form.Item name="grupo" label="Grupo">
+                <Select placeholder="Selecciona un grupo" allowClear>
+                  {OPCIONES_GRUPO.map(opcion => (
+                    <Option key={opcion.value} value={opcion.value}>{opcion.label}</Option>
+                  ))}
+                </Select>
+              </Form.Item>
               <Form.Item>
                 <Button type="primary" htmlType="submit" loading={loading}>
                   Guardar
@@ -601,6 +708,13 @@ export default function UsersPage() {
             <Form.Item name="genero" label="Género" rules={[{ required: true, message: 'Por favor selecciona el género' }]}>
               <Select placeholder="Selecciona un género">
                 {OPCIONES_GENERO.map(opcion => (
+                  <Option key={opcion.value} value={opcion.value}>{opcion.label}</Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item name="grupo" label="Grupo">
+              <Select placeholder="Selecciona un grupo" allowClear>
+                {OPCIONES_GRUPO.map(opcion => (
                   <Option key={opcion.value} value={opcion.value}>{opcion.label}</Option>
                 ))}
               </Select>

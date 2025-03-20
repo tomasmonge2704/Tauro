@@ -6,5 +6,6 @@ export type Usuario = {
   edad: number;
   status: string;
   genero: string;
+  grupo: string;
   created_at?: string;
 }; 

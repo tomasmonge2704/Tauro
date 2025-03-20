@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
     const searchTerm = searchParams.get('search') || '';
     const genero = searchParams.get('genero') || '';
     const status = searchParams.get('status') || '';
+    const grupo = searchParams.get('grupo') || '';
     const edadMin = searchParams.get('edadMin') ? parseInt(searchParams.get('edadMin') || '0') : null;
     const edadMax = searchParams.get('edadMax') ? parseInt(searchParams.get('edadMax') || '100') : null;
     
@@ -31,6 +32,10 @@ export async function GET(request: NextRequest) {
     
     if (status) {
       query = query.eq('status', status);
+    }
+    
+    if (grupo) {
+      query = query.eq('grupo', grupo);
     }
     
     if (edadMin !== null) {
@@ -65,6 +70,10 @@ export async function GET(request: NextRequest) {
     
     if (status) {
       query = query.eq('status', status);
+    }
+    
+    if (grupo) {
+      query = query.eq('grupo', grupo);
     }
     
     if (edadMin !== null) {
