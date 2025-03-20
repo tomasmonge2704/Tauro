@@ -5,6 +5,8 @@ import { NavBar } from '@/components/NavBar';
 import { useState, useEffect } from 'react';
 import { EditOutlined, DeleteOutlined, UserAddOutlined } from '@ant-design/icons';
 import type { Usuario } from '@/types/usuario';
+import { ColumnsType } from 'antd/es/table';
+import { Key } from 'react';
 
 const { Content } = Layout;
 const { Option } = Select;
@@ -137,7 +139,7 @@ export default function UsersPage() {
   };
 
   // Definición de columnas para la tabla
-  const columnas = [
+  const columnas: ColumnsType<Usuario> = [
     {
       title: 'Nombre',
       dataIndex: 'nombre',
@@ -156,7 +158,8 @@ export default function UsersPage() {
         { text: 'Masculino', value: 'Masculino' },
         { text: 'Femenino', value: 'Femenino' },
       ],
-      onFilter: (value: string | number | boolean, record: Usuario) => record.genero.includes(value as string),
+      onFilter: (value: boolean | Key, record: Usuario) => 
+        record.genero.includes(String(value)),
       sorter: (a: Usuario, b: Usuario) => a.genero.localeCompare(b.genero),
     },
     {
@@ -167,7 +170,8 @@ export default function UsersPage() {
         { text: 'Activo', value: 'Activo' },
         { text: 'Inactivo', value: 'Inactivo' },
       ],
-      onFilter: (value: string | number | boolean, record: Usuario) => record.status.includes(value as string),
+      onFilter: (value: boolean | Key, record: Usuario) => 
+        record.status.includes(String(value)),
       sorter: (a: Usuario, b: Usuario) => a.status.localeCompare(b.status),
     },
     {
@@ -207,7 +211,7 @@ export default function UsersPage() {
         
         <Table
           dataSource={usuarios} 
-          columns={columnas as any} 
+          columns={columnas} 
           rowKey="id" 
           pagination={{ pageSize: 10 }}
           loading={loading}

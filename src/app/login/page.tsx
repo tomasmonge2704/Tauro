@@ -3,11 +3,10 @@
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Form, Input, Button, Divider, Card, Typography, Alert, Space, theme } from 'antd';
-import { GoogleOutlined, MailOutlined, LockOutlined } from '@ant-design/icons';
+import { Form, Input, Button, Card, Typography, Alert, theme } from 'antd';
+import { MailOutlined, LockOutlined } from '@ant-design/icons';
 
-const { Title, Paragraph, Text } = Typography;
+const { Title } = Typography;
 
 export default function LoginPage() {
   const router = useRouter();
