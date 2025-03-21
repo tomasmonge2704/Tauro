@@ -1,5 +1,6 @@
 'use client';
 
+import ProtectedRoute from '@/components/ProtectedRoute';
 import { Layout, Table, Modal, Form, Input, Button, message, Space, Select, Pagination, Input as AntInput, Row, Col, Card, Slider, Tag, Popconfirm, Badge, Tooltip } from 'antd';
 import { NavBar } from '@/components/NavBar';
 import { useState, useEffect } from 'react';
@@ -497,136 +498,194 @@ export default function UsersPage() {
   };
 
   return (
-    <Layout style={{ backgroundColor: themeMode === 'dark' ? '#141414' : '#f0f2f5', minHeight: '100vh' }}>
-      <NavBar title="Usuarios" />
-      <Content style={{ padding: '20px' }}>
-        <Space style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-          <Search
-            placeholder="Buscar por nombre"
-            allowClear
-            enterButton={<SearchOutlined />}
-            size="middle"
-            onSearch={handleSearch}
-            style={{ width: 300 }}
-          />
-          <Space>
-            <Button 
-              onClick={toggleFiltros}
-              icon={<FilterOutlined />}
-              type={filtrosVisibles ? "primary" : "default"}
-            >
-              Filtros
-            </Button>
-            <Button 
-              type="primary" 
-              icon={<UserAddOutlined />} 
-              onClick={() => setModalCrearVisible(true)}
-            >
-              Agregar Usuario
-            </Button>
+    <ProtectedRoute>
+      <Layout style={{ backgroundColor: themeMode === 'dark' ? '#141414' : '#f0f2f5', minHeight: '100vh' }}>
+        <NavBar title="Usuarios" />
+        <Content style={{ padding: '20px' }}>
+          <Space style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+            <Search
+              placeholder="Buscar por nombre"
+              allowClear
+              enterButton={<SearchOutlined />}
+              size="middle"
+              onSearch={handleSearch}
+              style={{ width: 300 }}
+            />
+            <Space>
+              <Button 
+                onClick={toggleFiltros}
+                icon={<FilterOutlined />}
+                type={filtrosVisibles ? "primary" : "default"}
+              >
+                Filtros
+              </Button>
+              <Button 
+                type="primary" 
+                icon={<UserAddOutlined />} 
+                onClick={() => setModalCrearVisible(true)}
+              >
+                Agregar Usuario
+              </Button>
+            </Space>
           </Space>
-        </Space>
-        
-        {filtrosVisibles && (
-          <Card style={{ marginBottom: 16 }}>
-            <Form
-              form={formFiltros}
-              layout="vertical"
-              onFinish={aplicarFiltros}
-              initialValues={{
-                genero: filtros.genero,
-                status: filtros.status,
-                grupo: filtros.grupo,
-                edad: filtros.edadMin !== null && filtros.edadMax !== null ? [filtros.edadMin, filtros.edadMax] : undefined
-              }}
-            >
-              <Row gutter={16}>
-                <Col span={8}>
-                  <Form.Item name="genero" label="Género">
-                    <Select placeholder="Selecciona un género" allowClear>
-                      {OPCIONES_GENERO.map(opcion => (
-                        <Option key={opcion.value} value={opcion.value}>{opcion.label}</Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                </Col>
-                <Col span={8}>
-                  <Form.Item name="status" label="Status">
-                    <Select placeholder="Selecciona un status" allowClear>
-                      {OPCIONES_STATUS.map(opcion => (
-                        <Option key={opcion.value} value={opcion.value}>{opcion.label}</Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                </Col>
-                <Col span={8}>
-                  <Form.Item name="grupo" label="Grupo">
-                    <Select 
-                      placeholder="Selecciona un grupo" 
-                      allowClear
-                      style={{ width: '100%' }}
-                    >
-                      {OPCIONES_GRUPO.map(opcion => (
-                        <Option key={opcion.value} value={opcion.value}>{opcion.label}</Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                </Col>
-                <Col span={8}>
-                  <Form.Item name="edad" label="Rango de edad">
-                    <Slider range min={0} max={100} />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row justify="end">
-                <Space>
-                  <Button onClick={limpiarFiltros}>
-                    Limpiar
-                  </Button>
-                  <Button type="primary" htmlType="submit">
-                    Aplicar filtros
-                  </Button>
-                </Space>
-              </Row>
-            </Form>
-          </Card>
-        )}
-        
-        {renderFiltrosActivos()}
-        
-        <Table
-          dataSource={usuarios} 
-          columns={columnas} 
-          rowKey="id" 
-          pagination={false} // Desactivamos la paginación de la tabla
-          loading={loading}
-          style={{ boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}
-        />
-        
-        {/* Componente de paginación personalizado */}
-        <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end' }}>
-          <Pagination
-            current={pagination.page}
-            pageSize={pagination.pageSize}
-            total={pagination.total}
-            onChange={handlePageChange}
-            showSizeChanger
-            pageSizeOptions={['5', '10', '20', '50']}
-            showTotal={(total, range) => `${range[0]}-${range[1]} de ${total} usuarios`}
+          
+          {filtrosVisibles && (
+            <Card style={{ marginBottom: 16 }}>
+              <Form
+                form={formFiltros}
+                layout="vertical"
+                onFinish={aplicarFiltros}
+                initialValues={{
+                  genero: filtros.genero,
+                  status: filtros.status,
+                  grupo: filtros.grupo,
+                  edad: filtros.edadMin !== null && filtros.edadMax !== null ? [filtros.edadMin, filtros.edadMax] : undefined
+                }}
+              >
+                <Row gutter={16}>
+                  <Col span={8}>
+                    <Form.Item name="genero" label="Género">
+                      <Select placeholder="Selecciona un género" allowClear>
+                        {OPCIONES_GENERO.map(opcion => (
+                          <Option key={opcion.value} value={opcion.value}>{opcion.label}</Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                  <Col span={8}>
+                    <Form.Item name="status" label="Status">
+                      <Select placeholder="Selecciona un status" allowClear>
+                        {OPCIONES_STATUS.map(opcion => (
+                          <Option key={opcion.value} value={opcion.value}>{opcion.label}</Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                  <Col span={8}>
+                    <Form.Item name="grupo" label="Grupo">
+                      <Select 
+                        placeholder="Selecciona un grupo" 
+                        allowClear
+                        style={{ width: '100%' }}
+                      >
+                        {OPCIONES_GRUPO.map(opcion => (
+                          <Option key={opcion.value} value={opcion.value}>{opcion.label}</Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                  <Col span={8}>
+                    <Form.Item name="edad" label="Rango de edad">
+                      <Slider range min={0} max={100} />
+                    </Form.Item>
+                  </Col>
+                </Row>
+                <Row justify="end">
+                  <Space>
+                    <Button onClick={limpiarFiltros}>
+                      Limpiar
+                    </Button>
+                    <Button type="primary" htmlType="submit">
+                      Aplicar filtros
+                    </Button>
+                  </Space>
+                </Row>
+              </Form>
+            </Card>
+          )}
+          
+          {renderFiltrosActivos()}
+          
+          <Table
+            dataSource={usuarios} 
+            columns={columnas} 
+            rowKey="id" 
+            pagination={false} // Desactivamos la paginación de la tabla
+            loading={loading}
+            style={{ boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}
           />
-        </div>
-        
-        {/* Modal para editar usuario */}
-        {usuarioEditando && (
+          
+          {/* Componente de paginación personalizado */}
+          <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end' }}>
+            <Pagination
+              current={pagination.page}
+              pageSize={pagination.pageSize}
+              total={pagination.total}
+              onChange={handlePageChange}
+              showSizeChanger
+              pageSizeOptions={['5', '10', '20', '50']}
+              showTotal={(total, range) => `${range[0]}-${range[1]} de ${total} usuarios`}
+            />
+          </div>
+          
+          {/* Modal para editar usuario */}
+          {usuarioEditando && (
+            <Modal
+              title="Editar Usuario"
+              open={true}
+              onCancel={handleCancel}
+              footer={null}
+            >
+              <Form
+                initialValues={usuarioEditando}
+                onFinish={handleSave}
+                layout="vertical"
+              >
+                <Form.Item name="nombre" label="Nombre" rules={[{ required: true, message: 'Por favor ingresa el nombre' }]}>
+                  <Input />
+                </Form.Item>
+                <Form.Item name="email" label="Email" rules={[{ required: true, message: 'Por favor ingresa el email', type: 'email' }]}>
+                  <Input />
+                </Form.Item>
+                <Form.Item name="rol" label="Rol">
+                  <Input type="number" />
+                </Form.Item>
+                <Form.Item name="edad" label="Edad">
+                  <Input type="number" />
+                </Form.Item>
+                <Form.Item name="status" label="Status" rules={[{ required: true, message: 'Por favor selecciona el status' }]}>
+                  <Select placeholder="Selecciona un status">
+                    {OPCIONES_STATUS.map(opcion => (
+                      <Option key={opcion.value} value={opcion.value}>{opcion.label}</Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+                <Form.Item name="genero" label="Género" rules={[{ required: true, message: 'Por favor selecciona el género' }]}>
+                  <Select placeholder="Selecciona un género">
+                    {OPCIONES_GENERO.map(opcion => (
+                      <Option key={opcion.value} value={opcion.value}>{opcion.label}</Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+                <Form.Item name="grupo" label="Grupo">
+                  <Select placeholder="Selecciona un grupo" allowClear>
+                    {OPCIONES_GRUPO.map(opcion => (
+                      <Option key={opcion.value} value={opcion.value}>{opcion.label}</Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+                <Form.Item>
+                  <Button type="primary" htmlType="submit" loading={loading}>
+                    Guardar
+                  </Button>
+                  <Button onClick={handleCancel} style={{ marginLeft: '8px' }}>
+                    Cancelar
+                  </Button>
+                </Form.Item>
+              </Form>
+            </Modal>
+          )}
+          
+          {/* Modal para crear usuario */}
           <Modal
-            title="Editar Usuario"
-            open={true}
-            onCancel={handleCancel}
+            title="Agregar Usuario"
+            open={modalCrearVisible}
+            onCancel={handleCrearCancel}
             footer={null}
           >
             <Form
-              initialValues={usuarioEditando}
-              onFinish={handleSave}
+              form={form}
+              onFinish={handleCrearUsuario}
               layout="vertical"
             >
               <Form.Item name="nombre" label="Nombre" rules={[{ required: true, message: 'Por favor ingresa el nombre' }]}>
@@ -635,13 +694,13 @@ export default function UsersPage() {
               <Form.Item name="email" label="Email" rules={[{ required: true, message: 'Por favor ingresa el email', type: 'email' }]}>
                 <Input />
               </Form.Item>
-              <Form.Item name="rol" label="Rol">
+              <Form.Item name="rol" label="Rol" initialValue={0}>
                 <Input type="number" />
               </Form.Item>
-              <Form.Item name="edad" label="Edad">
+              <Form.Item name="edad" label="Edad" initialValue={25}>
                 <Input type="number" />
               </Form.Item>
-              <Form.Item name="status" label="Status" rules={[{ required: true, message: 'Por favor selecciona el status' }]}>
+              <Form.Item name="status" label="Status" initialValue="Activo" rules={[{ required: true, message: 'Por favor selecciona el status' }]}>
                 <Select placeholder="Selecciona un status">
                   {OPCIONES_STATUS.map(opcion => (
                     <Option key={opcion.value} value={opcion.value}>{opcion.label}</Option>
@@ -664,72 +723,16 @@ export default function UsersPage() {
               </Form.Item>
               <Form.Item>
                 <Button type="primary" htmlType="submit" loading={loading}>
-                  Guardar
+                  Crear
                 </Button>
-                <Button onClick={handleCancel} style={{ marginLeft: '8px' }}>
+                <Button onClick={handleCrearCancel} style={{ marginLeft: '8px' }}>
                   Cancelar
                 </Button>
               </Form.Item>
             </Form>
           </Modal>
-        )}
-        
-        {/* Modal para crear usuario */}
-        <Modal
-          title="Agregar Usuario"
-          open={modalCrearVisible}
-          onCancel={handleCrearCancel}
-          footer={null}
-        >
-          <Form
-            form={form}
-            onFinish={handleCrearUsuario}
-            layout="vertical"
-          >
-            <Form.Item name="nombre" label="Nombre" rules={[{ required: true, message: 'Por favor ingresa el nombre' }]}>
-              <Input />
-            </Form.Item>
-            <Form.Item name="email" label="Email" rules={[{ required: true, message: 'Por favor ingresa el email', type: 'email' }]}>
-              <Input />
-            </Form.Item>
-            <Form.Item name="rol" label="Rol" initialValue={0}>
-              <Input type="number" />
-            </Form.Item>
-            <Form.Item name="edad" label="Edad" initialValue={25}>
-              <Input type="number" />
-            </Form.Item>
-            <Form.Item name="status" label="Status" initialValue="Activo" rules={[{ required: true, message: 'Por favor selecciona el status' }]}>
-              <Select placeholder="Selecciona un status">
-                {OPCIONES_STATUS.map(opcion => (
-                  <Option key={opcion.value} value={opcion.value}>{opcion.label}</Option>
-                ))}
-              </Select>
-            </Form.Item>
-            <Form.Item name="genero" label="Género" rules={[{ required: true, message: 'Por favor selecciona el género' }]}>
-              <Select placeholder="Selecciona un género">
-                {OPCIONES_GENERO.map(opcion => (
-                  <Option key={opcion.value} value={opcion.value}>{opcion.label}</Option>
-                ))}
-              </Select>
-            </Form.Item>
-            <Form.Item name="grupo" label="Grupo">
-              <Select placeholder="Selecciona un grupo" allowClear>
-                {OPCIONES_GRUPO.map(opcion => (
-                  <Option key={opcion.value} value={opcion.value}>{opcion.label}</Option>
-                ))}
-              </Select>
-            </Form.Item>
-            <Form.Item>
-              <Button type="primary" htmlType="submit" loading={loading}>
-                Crear
-              </Button>
-              <Button onClick={handleCrearCancel} style={{ marginLeft: '8px' }}>
-                Cancelar
-              </Button>
-            </Form.Item>
-          </Form>
-        </Modal>
-      </Content>
-    </Layout>
+        </Content>
+      </Layout>
+    </ProtectedRoute>
   );
 }

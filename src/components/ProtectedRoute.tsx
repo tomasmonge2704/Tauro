@@ -2,32 +2,25 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import { Spin } from 'antd';
+import { useEffect, ReactNode } from 'react';
 
-export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { data: session, status } = useSession();
+export default function ProtectedRoute({ children }: { children: ReactNode }) {
+  const { status } = useSession();
   const router = useRouter();
-
+  
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
     }
   }, [status, router]);
-
+  
   if (status === 'loading') {
-    return (
-      <Spin 
-        size="large" 
-        tip="Cargando..." 
-        fullscreen 
-      />
-    );
+    return <div>Cargando...</div>;
   }
-
-  if (!session) {
+  
+  if (status === 'unauthenticated') {
     return null;
   }
-
+  
   return <>{children}</>;
 } 

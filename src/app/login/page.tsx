@@ -1,41 +1,150 @@
 'use client';
 
 import { useState } from 'react';
-import { signIn } from 'next-auth/react';
+import { Form, Input, Button, Card, Typography, message, Steps, Alert } from 'antd';
+import { MailOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
-import { Form, Input, Button, Card, Typography, Alert, theme } from 'antd';
-import { MailOutlined, LockOutlined } from '@ant-design/icons';
+import { useTheme } from '@/context/ThemeContext';
+import bcrypt from 'bcryptjs';
+import { signIn } from 'next-auth/react';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
+const { Step } = Steps;
+
+interface EmailCheckResponse {
+  exists: boolean;
+  hasPassword: boolean;
+  userId?: string;
+}
 
 export default function LoginPage() {
   const router = useRouter();
-  const [error, setError] = useState('');
+  const { themeMode } = useTheme();
+  const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const { token } = theme.useToken();
+  const [currentStep, setCurrentStep] = useState(0);
+  const [email, setEmail] = useState('');
+  const [userId, setUserId] = useState<string | null>(null);
+  const [hasPassword, setHasPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (values: { email: string; password: string }) => {
-    setLoading(true);
-    setError('');
-    
+  // Paso 1: Verificar si el email existe
+  const handleEmailCheck = async (values: { email: string }) => {
     try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(`/api/usuarios/check-email?email=${encodeURIComponent(values.email)}`);
+      
+      if (!response.ok) {
+        throw new Error('Error al verificar el email');
+      }
+      
+      const data: EmailCheckResponse = await response.json();
+      
+      setEmail(values.email);
+      setHasPassword(data.hasPassword);
+      
+      if (data.exists) {
+        if (data.userId) {
+          setUserId(data.userId);
+        }
+        setCurrentStep(1);
+      } else {
+        setError('No existe un usuario con este email. Por favor, contacta al administrador.');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setError('Error al verificar el email. Inténtalo de nuevo.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Paso 2a: Iniciar sesión con contraseña existente
+  const handleLogin = async (values: { password: string }) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Usar redirección directa de NextAuth
+      await signIn('credentials', {
+        redirect: true,
+        callbackUrl: '/',
+        email,
+        password: values.password,
+      });
+      
+      // No es necesario manejar la redirección manualmente si redirect: true
+    } catch (error) {
+      console.error('Error:', error);
+      setError('Contraseña incorrecta. Inténtalo de nuevo.');
+      setLoading(false);
+    }
+  };
+
+  // Paso 2b: Crear nueva contraseña
+  const handleCreatePassword = async (values: { password: string; confirmPassword: string }) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      if (values.password !== values.confirmPassword) {
+        setError('Las contraseñas no coinciden');
+        return;
+      }
+      
+      if (!userId) {
+        setError('Error de identificación de usuario');
+        return;
+      }
+      
+      // Encriptar la contraseña en el cliente
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(values.password, salt);
+      
+      const response = await fetch(`/api/usuarios/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          password: hashedPassword 
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al crear la contraseña');
+      }
+      
+      message.success('Contraseña creada exitosamente');
+      
+      // Iniciar sesión automáticamente con NextAuth
       const result = await signIn('credentials', {
         redirect: false,
-        email: values.email,
+        email,
         password: values.password,
       });
 
       if (result?.error) {
-        setError('Credenciales inválidas. Por favor, intenta de nuevo.');
+        // Si falla el inicio automático, redirigir al login
+        setCurrentStep(0);
+        message.info('Por favor, inicia sesión con tu nueva contraseña');
       } else {
         router.push('/');
       }
     } catch (error) {
-      console.error('Error durante el inicio de sesión:', error);
-      setError('Ocurrió un error durante el inicio de sesión.');
+      console.error('Error:', error);
+      setError('Error al crear la contraseña. Inténtalo de nuevo.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleBack = () => {
+    setCurrentStep(0);
+    setError(null);
   };
 
   return (
@@ -43,75 +152,178 @@ export default function LoginPage() {
       display: 'flex', 
       justifyContent: 'center', 
       alignItems: 'center', 
-      minHeight: '100vh', 
-      padding: '20px',
-      background: token.colorBgLayout
+      minHeight: '100vh',
+      backgroundColor: themeMode === 'dark' ? '#141414' : '#f0f0f0'
     }}>
       <Card 
         style={{ 
-          width: '100%', 
-          maxWidth: '400px',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)'
-        }} 
-        bordered={false}
+          width: 400, 
+          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+          backgroundColor: themeMode === 'dark' ? '#1f1f1f' : '#fff'
+        }}
       >
-        <Title level={2} style={{ textAlign: 'center', color: token.colorTextHeading }}>Iniciar Sesión</Title>
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <Title level={2} style={{ color: themeMode === 'dark' ? '#fff' : undefined }}>
+            Iniciar Sesión
+          </Title>
+          {currentStep > 0 && (
+            <Steps current={currentStep} size="small" style={{ marginBottom: 24 }}>
+              <Step title="Email" />
+              <Step title={hasPassword ? "Contraseña" : "Crear Contraseña"} />
+            </Steps>
+          )}
+        </div>
         
         {error && (
           <Alert
-            message={error}
+            message="Error"
+            description={error}
             type="error"
             showIcon
-            style={{ marginBottom: '24px' }}
+            style={{ marginBottom: 16 }}
           />
         )}
         
-        <Form
-          name="login"
-          initialValues={{ remember: true }}
-          onFinish={handleSubmit}
-          layout="vertical"
-        >
-          <Form.Item
-            name="email"
-            label={<span style={{ color: token.colorTextLabel }}>Correo Electrónico</span>}
-            rules={[{ required: true, message: 'Por favor ingresa tu correo electrónico' }]}
+        {currentStep === 0 && (
+          <Form
+            form={form}
+            name="email_check"
+            onFinish={handleEmailCheck}
+            layout="vertical"
           >
-            <Input 
-              prefix={<MailOutlined style={{ color: token.colorPrimary }} />} 
-              placeholder="tu@email.com" 
-              size="large"
-              style={{ backgroundColor: 'transparent' }}
-              className="remove-autocomplete-bg"
-            />
-          </Form.Item>
-          
-          <Form.Item
-            name="password"
-            label={<span style={{ color: token.colorTextLabel }}>Contraseña</span>}
-            rules={[{ required: true, message: 'Por favor ingresa tu contraseña' }]}
-          >
-            <Input.Password 
-              prefix={<LockOutlined style={{ color: token.colorPrimary }} />} 
-              placeholder="********" 
-              size="large"
-              style={{ backgroundColor: 'transparent' }}
-              className="remove-autocomplete-bg"
-            />
-          </Form.Item>
-          
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={loading}
-              block
-              size="large"
+            <Form.Item
+              name="email"
+              rules={[
+                { required: true, message: 'Por favor ingresa tu email' },
+                { type: 'email', message: 'Por favor ingresa un email válido' }
+              ]}
             >
-              {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+              <Input 
+                prefix={<MailOutlined />} 
+                placeholder="Email" 
+                size="large" 
+              />
+            </Form.Item>
+            
+            <Form.Item>
+              <Button 
+                type="primary" 
+                htmlType="submit" 
+                size="large" 
+                block 
+                loading={loading}
+              >
+                Continuar
+              </Button>
+            </Form.Item>
+          </Form>
+        )}
+        
+        {currentStep === 1 && hasPassword && (
+          <Form
+            name="login"
+            onFinish={handleLogin}
+            layout="vertical"
+          >
+            
+            <Form.Item
+              name="password"
+              rules={[{ required: true, message: 'Por favor ingresa tu contraseña' }]}
+            >
+              <Input.Password 
+                placeholder="Contraseña" 
+                size="large" 
+              />
+            </Form.Item>
+            
+            <Form.Item>
+              <Button 
+                type="primary" 
+                htmlType="submit" 
+                size="large" 
+                block 
+                loading={loading}
+              >
+                Iniciar Sesión
+              </Button>
+            </Form.Item>
+            
+            <Button 
+              type="link" 
+              onClick={handleBack}
+              style={{ padding: 0 }}
+            >
+              Volver
             </Button>
-          </Form.Item>
-        </Form>
+          </Form>
+        )}
+        
+        {currentStep === 1 && !hasPassword && (
+          <Form
+            name="create_password"
+            onFinish={handleCreatePassword}
+            layout="vertical"
+          >
+            <Form.Item>
+              <Text style={{ color: themeMode === 'dark' ? '#fff' : undefined }}>
+                Email: {email}
+              </Text>
+            </Form.Item>
+            
+            <Form.Item
+              name="password"
+              rules={[
+                { required: true, message: 'Por favor crea una contraseña' },
+                { min: 6, message: 'La contraseña debe tener al menos 6 caracteres' }
+              ]}
+            >
+              <Input.Password 
+                placeholder="Nueva contraseña" 
+                size="large" 
+              />
+            </Form.Item>
+            
+            <Form.Item
+              name="confirmPassword"
+              rules={[
+                { required: true, message: 'Por favor confirma tu contraseña' },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!value || getFieldValue('password') === value) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject(new Error('Las contraseñas no coinciden'));
+                  },
+                }),
+              ]}
+            >
+              <Input.Password 
+                placeholder="Confirmar contraseña" 
+                size="large" 
+              />
+            </Form.Item>
+            
+            <Form.Item>
+              <Button 
+                type="primary" 
+                htmlType="submit" 
+                size="large" 
+                block 
+                loading={loading}
+              >
+                Crear Contraseña
+              </Button>
+            </Form.Item>
+            
+            <Button 
+              type="link" 
+              onClick={handleBack}
+              style={{ padding: 0 }}
+            >
+              Volver
+            </Button>
+          </Form>
+        )}
       </Card>
     </div>
   );

@@ -1,7 +1,11 @@
-import { Layout, Button, Typography, Dropdown, Space, Avatar, Switch } from 'antd';
+'use client';
+
+import { Layout, Button, Typography, Dropdown, Space, Avatar, Switch, Spin } from 'antd';
 import { signOut, useSession } from 'next-auth/react';
-import { UserOutlined, DownOutlined, BulbOutlined, BulbFilled } from '@ant-design/icons';
+import { UserOutlined, DownOutlined, BulbOutlined, BulbFilled, LoadingOutlined } from '@ant-design/icons';
 import { useTheme } from '@/context/ThemeContext';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 const { Header } = Layout;
 const { Title, Text } = Typography;
@@ -11,8 +15,21 @@ interface NavBarProps {
 }
 
 export const NavBar = ({ title = 'Home' }: NavBarProps) => {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const { themeMode, toggleTheme } = useTheme();
+  const router = useRouter();
+  
+  const isLoading = status === 'loading';
+  const isAuthenticated = status === 'authenticated';
+
+  const handleLogout = async () => {
+    try {
+      await signOut({ redirect: false });
+      router.push('/login');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
+  };
 
   const menuItems = {
     items: [
@@ -24,7 +41,9 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <Avatar size={64} icon={<UserOutlined />} src={session?.user?.image} />
                 <div>
-                  <Text strong style={{ fontSize: '16px' }}>{session?.user?.name}</Text>
+                  <Text strong style={{ fontSize: '16px' }}>
+                    {session?.user?.nombre || session?.user?.name || session?.user?.email}
+                  </Text>
                   <br />
                   <Text type="secondary">{session?.user?.email}</Text>
                 </div>
@@ -50,12 +69,33 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
                 type="primary" 
                 danger
                 block
-                onClick={() => signOut({ callbackUrl: '/' })}
+                onClick={handleLogout}
               >
                 Cerrar Sesión
               </Button>
             </Space>
           </div>
+        ),
+      },
+    ],
+  };
+
+  const navigationItems = {
+    items: [
+      {
+        key: 'home',
+        label: (
+          <Link href="/" style={{ color: 'inherit' }}>
+            Inicio
+          </Link>
+        ),
+      },
+      {
+        key: 'users',
+        label: (
+          <Link href="/users" style={{ color: 'inherit' }}>
+            Usuarios
+          </Link>
         ),
       },
     ],
@@ -72,31 +112,51 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
         color: themeMode === 'dark' ? 'white' : 'black',
       }}
     >
-      <Title
-        level={3}
-        style={{
-          color: themeMode === 'dark' ? 'white' : 'black',
-          margin: 0,
-        }}
-      >
-        {title}
-      </Title>
-      
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        {session?.user?.name && (
-          <Dropdown menu={menuItems} trigger={['click']} placement="bottomRight">
+      <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+        <Link href="/" style={{ textDecoration: 'none' }}>
+          <Title
+            level={3}
+            style={{
+              color: themeMode === 'dark' ? 'white' : 'black',
+              margin: 0,
+            }}
+          >
+            {title}
+          </Title>
+        </Link>
+        
+        {isAuthenticated && (
+          <Dropdown menu={navigationItems} trigger={['hover']} placement="bottomLeft">
             <a
               onClick={(e) => e.preventDefault()}
               style={{ color: themeMode === 'dark' ? 'white' : 'black' }}
             >
               <Space>
-                <Avatar size="small" icon={<UserOutlined />} src={session?.user?.image} />
-                {session.user.name}
+                Menú
                 <DownOutlined />
               </Space>
             </a>
           </Dropdown>
         )}
+      </div>
+      
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        {isLoading ? (
+          <Spin indicator={<LoadingOutlined style={{ fontSize: 24, color: themeMode === 'dark' ? 'white' : 'black' }} spin />} />
+        ) : isAuthenticated ? (
+          <Dropdown menu={menuItems} trigger={['click']} placement="bottomRight">
+            <a
+              onClick={(e) => e.preventDefault()}
+              style={{ color: themeMode === 'dark' ? 'white' : 'black', cursor: 'pointer' }}
+            >
+              <Space>
+                <Avatar size="small" icon={<UserOutlined />} src={session?.user?.image} />
+                {session.user.nombre || session.user.name || session.user.email}
+                <DownOutlined />
+              </Space>
+            </a>
+          </Dropdown>
+        ) : null}
       </div>
     </Header>
   );
