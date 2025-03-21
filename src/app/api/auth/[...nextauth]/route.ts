@@ -4,6 +4,5 @@ import { authOptions } from "@/lib/auth";
 // Crear el handler con la configuración correcta
 const handler = NextAuth(authOptions);
 
-// Exportar las funciones GET y POST como funciones independientes
-export const GET = handler.GET;
-export const POST = handler.POST;
+// Exportar las funciones GET y POST directamente
+export { handler as GET, handler as POST };
