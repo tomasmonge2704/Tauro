@@ -3,11 +3,6 @@ import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
 export async function middleware(req: NextRequest) {
-  // Verificar si la ruta es una ruta de API de NextAuth
-  if (req.nextUrl.pathname.startsWith('/api/auth')) {
-    return NextResponse.next();
-  }
-
   // Intentar obtener el token de NextAuth
   const token = await getToken({ 
     req, 
@@ -32,14 +27,5 @@ export async function middleware(req: NextRequest) {
 
 // Configurar las rutas en las que se ejecutará el middleware
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api/auth (API routes of NextAuth.js)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    '/((?!api/auth|_next/static|_next/image|favicon.ico).*)',
-  ],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 }; 
