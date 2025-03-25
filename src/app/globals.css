@@ -40,3 +40,18 @@ a {
     color-scheme: dark;
   }
 }
+
+/* Permitir scroll horizontal en dispositivos móviles */
+@media (max-width: 768px) {
+  html, body {
+    overflow-x: auto !important;
+  }
+  
+  .ant-table-wrapper {
+    overflow-x: auto !important;
+  }
+  
+  .ant-table-content {
+    overflow-x: auto !important;
+  }
+}

@@ -1,11 +1,12 @@
 'use client';
 
-import { Layout, Button, Typography, Dropdown, Space, Avatar, Switch, Spin } from 'antd';
+import { Layout, Button, Typography, Dropdown, Space, Avatar, Switch, Spin, Drawer, Menu } from 'antd';
 import { signOut, useSession } from 'next-auth/react';
-import { UserOutlined, DownOutlined, BulbOutlined, BulbFilled, LoadingOutlined } from '@ant-design/icons';
+import { UserOutlined, DownOutlined, BulbOutlined, BulbFilled, LoadingOutlined, ProfileOutlined, MenuOutlined, QrcodeOutlined } from '@ant-design/icons';
 import { useTheme } from '@/context/ThemeContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 
 const { Header } = Layout;
 const { Title, Text } = Typography;
@@ -18,9 +19,22 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
   const { data: session, status } = useSession();
   const { themeMode, toggleTheme } = useTheme();
   const router = useRouter();
+  const [isMobile, setIsMobile] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   
   const isLoading = status === 'loading';
   const isAuthenticated = status === 'authenticated';
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -28,6 +42,12 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
       router.push('/login');
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
+    }
+  };
+
+  const handleViewProfile = () => {
+    if (session?.user?.id) {
+      router.push(`/users/${session.user.id}`);
     }
   };
 
@@ -55,6 +75,15 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
                 </div>
               )}
 
+              <Button 
+                type="default"
+                icon={<ProfileOutlined />}
+                block
+                onClick={handleViewProfile}
+              >
+                Ver mi perfil
+              </Button>
+
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>  
                 <Text type="secondary">Tema</Text>
                 <Switch
@@ -80,26 +109,41 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
     ],
   };
 
-  const navigationItems = {
-    items: [
-      {
-        key: 'home',
-        label: (
-          <Link href="/" style={{ color: 'inherit' }}>
-            Inicio
-          </Link>
-        ),
-      },
-      {
-        key: 'users',
-        label: (
-          <Link href="/users" style={{ color: 'inherit' }}>
-            Usuarios
-          </Link>
-        ),
-      },
-    ],
-  };
+  const navItems = [
+    {
+      key: 'home',
+      label: (
+        <Link href="/" style={{ color: 'inherit' }}>
+          Inicio
+        </Link>
+      ),
+    },
+    {
+      key: 'users',
+      label: (
+        <Link href="/users" style={{ color: 'inherit' }}>
+          Usuarios
+        </Link>
+      ),
+    },
+    {
+      key: 'dashboard',
+      label: (
+        <Link href="/dashboard" style={{ color: 'inherit' }}>
+          Dashboard
+        </Link>
+      ),
+    },
+    {
+      key: 'scan-qr',
+      label: (
+        <Link href="/scan-qr" style={{ color: 'inherit' }}>
+          Escanear QR
+        </Link>
+      ),
+      icon: <QrcodeOutlined />
+    },
+  ];
 
   return (
     <Header
@@ -112,7 +156,7 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
         color: themeMode === 'dark' ? 'white' : 'black',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center' }}>
         <Link href="/" style={{ textDecoration: 'none' }}>
           <Title
             level={3}
@@ -124,23 +168,31 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
             {title}
           </Title>
         </Link>
-        
-        {isAuthenticated && (
-          <Dropdown menu={navigationItems} trigger={['hover']} placement="bottomLeft">
-            <a
-              onClick={(e) => e.preventDefault()}
-              style={{ color: themeMode === 'dark' ? 'white' : 'black' }}
-            >
-              <Space>
-                Menú
-                <DownOutlined />
-              </Space>
-            </a>
-          </Dropdown>
-        )}
       </div>
       
+      {isAuthenticated && !isMobile && (
+        <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+          <Menu
+            mode="horizontal"
+            style={{ 
+              backgroundColor: 'transparent', 
+              borderBottom: 'none',
+              color: themeMode === 'dark' ? 'white' : 'black'
+            }}
+            items={navItems}
+          />
+        </div>
+      )}
+      
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        {isAuthenticated && isMobile && (
+          <Button
+            type="text"
+            icon={<MenuOutlined style={{ fontSize: '20px', color: themeMode === 'dark' ? 'white' : 'black' }} />}
+            onClick={() => setMenuOpen(true)}
+          />
+        )}
+        
         {isLoading ? (
           <Spin indicator={<LoadingOutlined style={{ fontSize: 24, color: themeMode === 'dark' ? 'white' : 'black' }} spin />} />
         ) : isAuthenticated ? (
@@ -158,6 +210,39 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
           </Dropdown>
         ) : null}
       </div>
+      
+      {isAuthenticated && (
+        <Drawer
+          title="Menú de navegación"
+          placement="right"
+          onClose={() => setMenuOpen(false)}
+          open={menuOpen}
+          width="100%"
+          bodyStyle={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            backgroundColor: themeMode === 'dark' ? '#1f1f1f' : '#fff',
+            color: themeMode === 'dark' ? 'white' : 'black',
+          }}
+          headerStyle={{
+            backgroundColor: themeMode === 'dark' ? '#1f1f1f' : '#fff',
+            color: themeMode === 'dark' ? 'white' : 'black',
+          }}
+        >
+          <Menu
+            mode="vertical"
+            style={{ 
+              fontSize: '18px', 
+              backgroundColor: 'transparent',
+              border: 'none',
+              color: themeMode === 'dark' ? 'white' : 'black'
+            }}
+            items={navItems}
+            onClick={() => setMenuOpen(false)}
+          />
+        </Drawer>
+      )}
     </Header>
   );
 }; 

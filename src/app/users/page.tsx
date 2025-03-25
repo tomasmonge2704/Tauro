@@ -2,40 +2,21 @@
 
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { Layout, Table, Modal, Form, Input, Button, message, Space, Select, Pagination, Input as AntInput, Row, Col, Card, Slider, Tag, Popconfirm, Badge, Tooltip } from 'antd';
-import { NavBar } from '@/components/NavBar';
 import { useState, useEffect } from 'react';
 import { EditOutlined, DeleteOutlined, UserAddOutlined, SearchOutlined, FilterOutlined, ClearOutlined, WarningOutlined } from '@ant-design/icons';
 import type { Usuario } from '@/types/usuario';
 import { ColumnsType } from 'antd/es/table';
-import { useTheme } from '@/context/ThemeContext';
+import { useRouter } from 'next/navigation';
+import { 
+  OPCIONES_GENERO, 
+  OPCIONES_STATUS, 
+  OPCIONES_GRUPO, 
+  getGrupoColor,
+} from '@/constants/options';
 
 const { Content } = Layout;
 const { Option } = Select;
 const { Search } = AntInput;
-
-// Definir opciones para los selectores
-const OPCIONES_GENERO = [
-  { value: 'Hombre', label: 'Masculino' },
-  { value: 'Mujer', label: 'Femenino' },
-  { value: 'No binario', label: 'No binario' },
-  { value: 'Prefiere no decir', label: 'Prefiere no decir' }
-];
-
-const OPCIONES_STATUS = [
-  { value: 'Activo', label: 'Activo' },
-  { value: 'Inactivo', label: 'Inactivo' },
-  { value: 'Pendiente', label: 'Pendiente' }
-];
-
-// Opciones para grupos
-const OPCIONES_GRUPO = [
-  { value: 'Administración', label: 'Administración' },
-  { value: 'Ventas', label: 'Ventas' },
-  { value: 'Marketing', label: 'Marketing' },
-  { value: 'Desarrollo', label: 'Desarrollo' },
-  { value: 'Soporte', label: 'Soporte' },
-  { value: 'Recursos Humanos', label: 'Recursos Humanos' }
-];
 
 // Interfaz para los datos de paginación
 interface PaginationData {
@@ -56,6 +37,7 @@ interface Filtros {
 }
 
 export default function UsersPage() {
+  const router = useRouter();
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [usuarioEditando, setUsuarioEditando] = useState<Usuario | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,7 +45,6 @@ export default function UsersPage() {
   const [filtrosVisibles, setFiltrosVisibles] = useState(false);
   const [form] = Form.useForm();
   const [formFiltros] = Form.useForm();
-  const { themeMode } = useTheme();
   const [emailVaciosCount, setEmailVaciosCount] = useState<number>(0);
   
   // Estado para los filtros
@@ -333,12 +314,26 @@ export default function UsersPage() {
     form.resetFields();
   };
 
+  // Función para navegar al detalle de usuario
+  const handleUserClick = (id: string) => {
+    router.push(`/users/${id}`);
+  };
+
   const columnas: ColumnsType<Usuario> = [
     {
       title: 'Nombre',
       dataIndex: 'nombre',
       key: 'nombre',
       sorter: (a: Usuario, b: Usuario) => a.nombre.localeCompare(b.nombre),
+      render: (text: string, record: Usuario) => (
+        <a onClick={(e) => {
+          e.stopPropagation();
+          handleUserClick(record.id);
+        }}>
+          {text}
+        </a>
+      ),
+      responsive: ['xs', 'sm', 'md', 'lg', 'xl'],
     },
     {
       title: () => (
@@ -355,13 +350,15 @@ export default function UsersPage() {
       ),
       dataIndex: 'email',
       key: 'email',
-      sorter: (a, b) => (a.email || '').localeCompare(b.email || '')
+      sorter: (a, b) => (a.email || '').localeCompare(b.email || ''),
+      responsive: ['xs', 'sm', 'md', 'lg', 'xl'],
     },
     {
       title: 'Edad',
       dataIndex: 'edad',
       key: 'edad',
       sorter: (a: Usuario, b: Usuario) => a.edad - b.edad,
+      responsive: ['md', 'lg', 'xl'],
     },
     {
       title: 'Genero',
@@ -375,6 +372,7 @@ export default function UsersPage() {
         return <Tag color={color}>{genero}</Tag>;
       },
       sorter: (a: Usuario, b: Usuario) => a.genero.localeCompare(b.genero),
+      responsive: ['md', 'lg', 'xl'],
     },
     {
       title: 'Status',
@@ -387,6 +385,7 @@ export default function UsersPage() {
         return <Tag color={color}>{status}</Tag>;
       },
       sorter: (a: Usuario, b: Usuario) => a.status.localeCompare(b.status),
+      responsive: ['md', 'lg', 'xl'],
     },
     {
       title: 'Grupo',
@@ -397,7 +396,8 @@ export default function UsersPage() {
           {grupo || 'Sin asignar'}
         </Tag>
       ),
-      sorter: (a, b) => (a.grupo || '').localeCompare(b.grupo || '')
+      sorter: (a, b) => (a.grupo || '').localeCompare(b.grupo || ''),
+      responsive: ['md', 'lg', 'xl'],
     },
     {
       title: 'Acciones',
@@ -409,6 +409,7 @@ export default function UsersPage() {
             icon={<EditOutlined />} 
             onClick={() => handleEdit(record)}
             size="small"
+            style={{ display: window.innerWidth <= 576 ? 'none' : 'inline-flex' }}
           />
           <Popconfirm
             title="¿Estás seguro de eliminar este usuario?"
@@ -425,28 +426,9 @@ export default function UsersPage() {
           </Popconfirm>
         </Space>
       ),
+      responsive: ['xs', 'sm', 'md', 'lg', 'xl'],
     },
   ];
-
-  // Función para obtener el color del tag según el grupo
-  const getGrupoColor = (grupo: string): string => {
-    switch (grupo) {
-      case 'Administración':
-        return 'blue';
-      case 'Ventas':
-        return 'green';
-      case 'Marketing':
-        return 'purple';
-      case 'Desarrollo':
-        return 'cyan';
-      case 'Soporte':
-        return 'orange';
-      case 'Recursos Humanos':
-        return 'pink';
-      default:
-        return 'default';
-    }
-  };
 
   // Renderizar los filtros activos como tags
   const renderFiltrosActivos = () => {
@@ -499,9 +481,7 @@ export default function UsersPage() {
 
   return (
     <ProtectedRoute>
-      <Layout style={{ backgroundColor: themeMode === 'dark' ? '#141414' : '#f0f2f5', minHeight: '100vh' }}>
-        <NavBar title="Usuarios" />
-        <Content style={{ padding: '20px' }}>
+        <Content> 
           <Space style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', width: '100%' }}>
             <Search
               placeholder="Buscar por nombre"
@@ -600,9 +580,10 @@ export default function UsersPage() {
             dataSource={usuarios} 
             columns={columnas} 
             rowKey="id" 
-            pagination={false} // Desactivamos la paginación de la tabla
+            pagination={false}
             loading={loading}
-            style={{ boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}
+            scroll={{ x: 'max-content' }}
+            showSorterTooltip={false}
           />
           
           {/* Componente de paginación personalizado */}
@@ -732,7 +713,6 @@ export default function UsersPage() {
             </Form>
           </Modal>
         </Content>
-      </Layout>
     </ProtectedRoute>
   );
 }

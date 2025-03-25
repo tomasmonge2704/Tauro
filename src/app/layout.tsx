@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "@/components/Providers";
-import { AntdRegistry } from '@ant-design/nextjs-registry';
-import { ThemeProvider } from "@/context/ThemeContext";
+import { NavBarWrapper } from "@/components/NavBarWrapper";
 
 export const metadata: Metadata = {
   title: "Tauro",
@@ -17,13 +16,11 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body>
-        <AntdRegistry>
-          <ThemeProvider>
-            <Providers>
-              {children}
-            </Providers>
-          </ThemeProvider>
-        </AntdRegistry>
+        <Providers>
+          <NavBarWrapper>
+            {children}
+          </NavBarWrapper>
+        </Providers>
       </body>
     </html>
   );

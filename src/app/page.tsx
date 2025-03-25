@@ -1,18 +1,15 @@
 'use client';
 
-import { Layout, Space, Button } from 'antd';
-import { NavBar } from '@/components/NavBar';
-import { useRouter } from 'next/navigation';
-import { useTheme } from '@/context/ThemeContext';
+import { Card, Row, Col, Statistic } from 'antd';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { UserOutlined, TeamOutlined, CalendarOutlined, QrcodeOutlined } from '@ant-design/icons';
 
-const { Content } = Layout;
 
 export default function Home() {
-  const router = useRouter();
-  const { themeMode } = useTheme();
   const { data: session, status } = useSession();
+  const router = useRouter();
   
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -29,16 +26,64 @@ export default function Home() {
   }
   
   return (
-    <Layout style={{ minHeight: '100vh', backgroundColor: themeMode === 'dark' ? '#141414' : '#f0f0f0' }}>
-      <NavBar title="TAURO" />
-      <Content style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <Space direction="vertical" size="large" style={{ width: '100%', textAlign: 'center' }}>
-          <h1>Coming Soon...</h1>
-          <Button type="primary" onClick={() => router.push('/users')}>
-            Ir a Usuarios
-          </Button>
-        </Space>
-      </Content>
-    </Layout>
+    <div>
+      <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
+        <Col xs={24} sm={12} md={8}>
+          <Card 
+            hoverable
+            onClick={() => router.push(`/users/${session.user.id}`)}
+          >
+            <Statistic 
+              title="Mi Perfil" 
+              value="Ver Detalles" 
+              prefix={<UserOutlined />} 
+              valueStyle={{ color: '#1677ff' }}
+            />
+          </Card>
+        </Col>
+        
+        <Col xs={24} sm={12} md={8}>
+          <Card 
+            hoverable
+            onClick={() => router.push('/users')}
+          >
+            <Statistic 
+              title="Usuarios" 
+              value="Gestionar" 
+              prefix={<TeamOutlined />} 
+              valueStyle={{ color: '#1677ff' }}
+            />
+          </Card>
+        </Col>
+        
+        <Col xs={24} sm={12} md={8}>
+          <Card 
+            hoverable
+            onClick={() => router.push('/dashboard')}
+          >
+            <Statistic 
+              title="Dashboard" 
+              value="Ver Estadísticas" 
+              prefix={<CalendarOutlined />} 
+              valueStyle={{ color: '#1677ff' }}
+            />
+          </Card>
+        </Col>
+        
+        <Col xs={24} sm={12} md={8}>
+          <Card 
+            hoverable
+            onClick={() => router.push('/scan-qr')}
+          >
+            <Statistic 
+              title="Escanear QR" 
+              value="Abrir escáner" 
+              prefix={<QrcodeOutlined />} 
+              valueStyle={{ color: '#722ed1' }}
+            />
+          </Card>
+        </Col>
+      </Row>
+    </div>
   );
 }

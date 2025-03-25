@@ -36,6 +36,7 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
+    const updated_at = new Date().toISOString();
     const datosActualizados = await request.json();
     
     console.log('ID del usuario a actualizar:', id);
@@ -44,7 +45,7 @@ export async function PUT(
     // Actualizar el usuario - modificar para manejar el caso de 0 filas
     const { data, error } = await supabase
       .from('users')
-      .update(datosActualizados)
+      .update({ ...datosActualizados, updated_at })
       .eq('id', id)
       .select();
     
