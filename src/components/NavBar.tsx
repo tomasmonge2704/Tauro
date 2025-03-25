@@ -6,7 +6,8 @@ import { UserOutlined, DownOutlined, BulbOutlined, BulbFilled, LoadingOutlined, 
 import { useTheme } from '@/context/ThemeContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { isMobile } from '@/app/utils/isMobile';
+import { useState } from 'react';
 
 const { Header } = Layout;
 const { Title, Text } = Typography;
@@ -19,22 +20,10 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
   const { data: session, status } = useSession();
   const { themeMode, toggleTheme } = useTheme();
   const router = useRouter();
-  const [isMobile, setIsMobile] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   
   const isLoading = status === 'loading';
   const isAuthenticated = status === 'authenticated';
-
-  useEffect(() => {
-    const checkScreenSize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-    
-    return () => window.removeEventListener('resize', checkScreenSize);
-  }, []);
 
   const handleLogout = async () => {
     try {
@@ -233,10 +222,11 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
           <Menu
             mode="vertical"
             style={{ 
-              fontSize: '18px', 
+              fontSize: '22px', 
               backgroundColor: 'transparent',
               border: 'none',
-              color: themeMode === 'dark' ? 'white' : 'black'
+              color: themeMode === 'dark' ? 'white' : 'black',
+              textAlign: 'center'
             }}
             items={navItems}
             onClick={() => setMenuOpen(false)}

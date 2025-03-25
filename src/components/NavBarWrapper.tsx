@@ -69,12 +69,13 @@ export function NavBarWrapper({ children }: NavBarWrapperProps) {
     <Layout style={{ 
       minHeight: '100vh', 
       backgroundColor: themeMode === 'dark' ? '#141414' : '#f0f0f0',
-      overflowX: 'auto' // Permitir scroll horizontal en todo el layout
     }}>
       {!isLoginPage && <NavBar title={pageTitle} />}
       <Content style={{ 
         padding: isLoginPage ? 0 : '24px',
-        minWidth: isDesktop ? 'auto' : '768px' // Ancho mínimo para móviles
+        width: '100%',
+        maxWidth: '100%',
+        overflowX: 'hidden'
       }}>
         {!isLoginPage && isDesktop && (
           <Breadcrumb 

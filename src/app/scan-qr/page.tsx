@@ -94,6 +94,7 @@ export default function ScanQRPage() {
 
       <Card
         style={{ 
+          width: '100%',
           maxWidth: '500px', 
           margin: '0 auto',
           backgroundColor: themeMode === 'dark' ? '#1f1f1f' : '#fff'

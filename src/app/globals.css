@@ -41,17 +41,26 @@ a {
   }
 }
 
-/* Permitir scroll horizontal en dispositivos móviles */
+/* Ajustes para dispositivos móviles */
 @media (max-width: 768px) {
-  html, body {
-    overflow-x: auto !important;
+  .ant-card {
+    width: 100% !important;
+    max-width: 100% !important;
   }
   
   .ant-table-wrapper {
+    width: 100% !important;
     overflow-x: auto !important;
   }
   
-  .ant-table-content {
-    overflow-x: auto !important;
+  .ant-row {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
   }
 }
+
+/* Asegurar que las cards no excedan el ancho disponible */
+.ant-card {
+  max-width: 100%;
+}
+

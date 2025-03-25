@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { UserOutlined, TeamOutlined, CalendarOutlined, QrcodeOutlined } from '@ant-design/icons';
 
-
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -26,12 +25,13 @@ export default function Home() {
   }
   
   return (
-    <div>
+    <div style={{ width: '100%', maxWidth: '100%', overflowX: 'hidden' }}>
       <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
         <Col xs={24} sm={12} md={8}>
           <Card 
             hoverable
             onClick={() => router.push(`/users/${session.user.id}`)}
+            style={{ width: '100%' }}
           >
             <Statistic 
               title="Mi Perfil" 
@@ -46,6 +46,7 @@ export default function Home() {
           <Card 
             hoverable
             onClick={() => router.push('/users')}
+            style={{ width: '100%' }}
           >
             <Statistic 
               title="Usuarios" 
@@ -60,6 +61,7 @@ export default function Home() {
           <Card 
             hoverable
             onClick={() => router.push('/dashboard')}
+            style={{ width: '100%' }}
           >
             <Statistic 
               title="Dashboard" 
@@ -74,6 +76,7 @@ export default function Home() {
           <Card 
             hoverable
             onClick={() => router.push('/scan-qr')}
+            style={{ width: '100%' }}
           >
             <Statistic 
               title="Escanear QR" 

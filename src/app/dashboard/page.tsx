@@ -103,9 +103,9 @@ export default function DashboardPage() {
   return (
     <Content>
       {/* Tarjetas de estadísticas generales */}
-      <Row gutter={[16, 16]}>
+      <Row gutter={[16, 16]} style={{ width: '100%' }}>
         <Col xs={24} sm={24} md={8} lg={8}>
-          <Card>
+          <Card style={{ width: '100%' }}>
             <Statistic
               title="Total Usuarios"
               value={estadisticas?.totalUsuarios || 0}

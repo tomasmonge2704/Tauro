@@ -13,6 +13,7 @@ import {
   OPCIONES_GRUPO, 
   getGrupoColor,
 } from '@/constants/options';
+import { isMobile } from '@/app/utils/isMobile';
 
 const { Content } = Layout;
 const { Option } = Select;
@@ -46,6 +47,11 @@ export default function UsersPage() {
   const [form] = Form.useForm();
   const [formFiltros] = Form.useForm();
   const [emailVaciosCount, setEmailVaciosCount] = useState<number>(0);
+  const [isBrowser, setIsBrowser] = useState(false);
+  
+  useEffect(() => {
+    setIsBrowser(true);
+  }, []);
   
   // Estado para los filtros
   const [filtros, setFiltros] = useState<Filtros>({
@@ -409,7 +415,7 @@ export default function UsersPage() {
             icon={<EditOutlined />} 
             onClick={() => handleEdit(record)}
             size="small"
-            style={{ display: window.innerWidth <= 576 ? 'none' : 'inline-flex' }}
+            style={{ display: isBrowser && isMobile() ? 'none' : 'inline-flex' }}
           />
           <Popconfirm
             title="¿Estás seguro de eliminar este usuario?"
@@ -482,32 +488,38 @@ export default function UsersPage() {
   return (
     <ProtectedRoute>
         <Content> 
-          <Space style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-            <Search
-              placeholder="Buscar por nombre"
-              allowClear
-              enterButton={<SearchOutlined />}
-              size="middle"
-              onSearch={handleSearch}
-              style={{ width: 300 }}
-            />
-            <Space>
-              <Button 
-                onClick={toggleFiltros}
-                icon={<FilterOutlined />}
-                type={filtrosVisibles ? "primary" : "default"}
-              >
-                Filtros
-              </Button>
-              <Button 
-                type="primary" 
-                icon={<UserAddOutlined />} 
-                onClick={() => setModalCrearVisible(true)}
-              >
-                Agregar Usuario
-              </Button>
-            </Space>
-          </Space>
+          <div style={{ marginBottom: 16 }}>
+            <Row gutter={[16, 16]}>
+              <Col xs={24} sm={24} md={12}>
+                <Search
+                  placeholder="Buscar por nombre"
+                  allowClear
+                  enterButton={<SearchOutlined />}
+                  size="middle"
+                  onSearch={handleSearch}
+                  style={{ width: '100%' }}
+                />
+              </Col>
+              <Col xs={24} sm={24} md={12} style={{ display: 'flex', justifyContent: isBrowser && isMobile() ? 'center' : 'flex-end' }}>
+                <Space>
+                  <Button 
+                    onClick={toggleFiltros}
+                    icon={<FilterOutlined />}
+                    type={filtrosVisibles ? "primary" : "default"}
+                  >
+                    Filtros
+                  </Button>
+                  <Button 
+                    type="primary" 
+                    icon={<UserAddOutlined />} 
+                    onClick={() => setModalCrearVisible(true)}
+                  >
+                    Agregar Usuario
+                  </Button>
+                </Space>
+              </Col>
+            </Row>
+          </div>
           
           {filtrosVisibles && (
             <Card style={{ marginBottom: 16 }}>
@@ -587,7 +599,7 @@ export default function UsersPage() {
           />
           
           {/* Componente de paginación personalizado */}
-          <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end' }}>
+          <div style={{ marginTop: 16, display: 'flex', justifyContent: 'center', flexWrap: 'wrap' }}>
             <Pagination
               current={pagination.page}
               pageSize={pagination.pageSize}
@@ -595,7 +607,9 @@ export default function UsersPage() {
               onChange={handlePageChange}
               showSizeChanger
               pageSizeOptions={['5', '10', '20', '50']}
-              showTotal={(total, range) => `${range[0]}-${range[1]} de ${total} usuarios`}
+              showTotal={!isBrowser || !isMobile() ? (total, range) => `${range[0]}-${range[1]} de ${total} usuarios` : undefined}
+              responsive={true}
+              size={isBrowser && isMobile() ? "small" : "default"}
             />
           </div>
           

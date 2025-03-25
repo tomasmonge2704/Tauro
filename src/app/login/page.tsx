@@ -158,8 +158,9 @@ export default function LoginPage() {
       <Card 
         style={{ 
           width: 400, 
-          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-          backgroundColor: themeMode === 'dark' ? '#1f1f1f' : '#fff'
+          boxShadow: 'none',
+          backgroundColor: 'transparent',
+          border: 'none'
         }}
       >
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
