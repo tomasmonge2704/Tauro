@@ -360,13 +360,6 @@ export default function UsersPage() {
       responsive: ['xs', 'sm', 'md', 'lg', 'xl'],
     },
     {
-      title: 'Edad',
-      dataIndex: 'edad',
-      key: 'edad',
-      sorter: (a: Usuario, b: Usuario) => a.edad - b.edad,
-      responsive: ['md', 'lg', 'xl'],
-    },
-    {
       title: 'Genero',
       dataIndex: 'genero',
       key: 'genero',
@@ -390,7 +383,7 @@ export default function UsersPage() {
         if (status === 'Pendiente') color = 'orange';
         return <Tag color={color}>{status}</Tag>;
       },
-      sorter: (a: Usuario, b: Usuario) => a.status.localeCompare(b.status),
+      sorter: (a: Usuario, b: Usuario) => a.status?.localeCompare(b.status),
       responsive: ['md', 'lg', 'xl'],
     },
     {
@@ -411,11 +404,10 @@ export default function UsersPage() {
       render: (_, record) => (
         <Space size="middle">
           <Button 
-            type="primary" 
+            type="dashed"
             icon={<EditOutlined />} 
             onClick={() => handleEdit(record)}
             size="small"
-            style={{ display: isBrowser && isMobile() ? 'none' : 'inline-flex' }}
           />
           <Popconfirm
             title="¿Estás seguro de eliminar este usuario?"
@@ -424,7 +416,7 @@ export default function UsersPage() {
             cancelText="No"
           >
             <Button 
-              type="primary" 
+              type="dashed" 
               danger 
               icon={<DeleteOutlined />} 
               size="small"

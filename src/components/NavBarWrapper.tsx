@@ -16,7 +16,7 @@ interface NavBarWrapperProps {
 export function NavBarWrapper({ children }: NavBarWrapperProps) {
   const { themeMode } = useTheme();
   const pathname = usePathname();
-  const pageTitle = 'Tauro';
+  const pageTitle = 'TAURO';
   const [isDesktop, setIsDesktop] = useState(true);
   
   // Detectar si es vista desktop

@@ -15,10 +15,10 @@
     "@supabase/supabase-js": "^2.49.1",
     "antd": "^5.24.4",
     "bcryptjs": "^3.0.2",
-    "html5-qrcode": "^2.3.8",
     "jsonwebtoken": "^9.0.2",
     "next": "15.2.3",
     "next-auth": "^4.24.11",
+    "qr-scanner": "^1.4.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

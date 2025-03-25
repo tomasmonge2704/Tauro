@@ -124,10 +124,10 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
       ),
     },
     {
-      key: 'scan-qr',
+      key: 'verificar-qr',
       label: (
-        <Link href="/scan-qr" style={{ color: 'inherit' }}>
-          Escanear QR
+        <Link href="/verificar-qr" style={{ color: 'inherit' }}>
+          Verificador QR
         </Link>
       ),
       icon: <QrcodeOutlined />
@@ -159,7 +159,7 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
         </Link>
       </div>
       
-      {isAuthenticated && !isMobile && (
+      {isAuthenticated && !isMobile() && (
         <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
           <Menu
             mode="horizontal"

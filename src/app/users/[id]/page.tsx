@@ -3,7 +3,7 @@
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useRouter, useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { Layout, Card, Form, Input, Button, Select, Skeleton, message, Space, Tag, Descriptions, Row, Col, Typography } from 'antd';
+import { Layout, Card, Form, Input, Button, Select, Skeleton, message, Space, Tag, Descriptions, Row, Col, Typography, QRCode } from 'antd';
 import { EditOutlined, SaveOutlined, CloseOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { Usuario } from '@/types/usuario';
 import { 
@@ -24,12 +24,15 @@ export default function UserDetailPage() {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
+  const [qrToken, setQrToken] = useState<string | null>(null);
+  const [qrLoading, setQrLoading] = useState(false);
   const [form] = Form.useForm();
 
   // Cargar datos del usuario
   useEffect(() => {
     if (userId) {
       fetchUsuario(userId);
+      fetchQrToken(userId);
     }
   }, [userId]);
 
@@ -50,6 +53,25 @@ export default function UserDetailPage() {
       message.error('No se pudieron cargar los datos del usuario');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchQrToken = async (id: string) => {
+    try {
+      setQrLoading(true);
+      const response = await fetch(`/api/usuarios/${id}/qr`);
+      
+      if (!response.ok) {
+        throw new Error('Error al generar el código QR');
+      }
+      
+      const data = await response.json();
+      setQrToken(data.qrToken);
+    } catch (error) {
+      console.error('Error:', error);
+      message.error('No se pudo generar el código QR');
+    } finally {
+      setQrLoading(false);
     }
   };
 
@@ -214,6 +236,16 @@ export default function UserDetailPage() {
           }
           style={{ boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}
         >
+          {/* Div para el QR */}
+          <div style={{ marginBottom: '16px', textAlign: 'center' }}>
+            {qrLoading ? (
+              <Skeleton.Avatar active size={128} shape="square" />
+            ) : qrToken ? (
+                <QRCode value={qrToken} size={150} bordered />
+            ) : (
+              <Typography.Text type="warning">No se pudo generar el código QR</Typography.Text>
+            )}
+          </div>
           {loading ? (
             <Skeleton active paragraph={{ rows: 6 }} />
           ) : (

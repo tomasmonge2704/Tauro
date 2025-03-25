@@ -4,7 +4,7 @@ import Providers from "@/components/Providers";
 import { NavBarWrapper } from "@/components/NavBarWrapper";
 
 export const metadata: Metadata = {
-  title: "Tauro",
+  title: "TAURO",
   description: "La mejor fiesta del año.",
 };
 

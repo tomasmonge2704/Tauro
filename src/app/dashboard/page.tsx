@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Layout, Card, Row, Col, Statistic, Spin, Typography, Alert, Space } from 'antd';
+import { Layout, Card, Row, Col, Statistic, Spin, Typography, Alert } from 'antd';
 import { ManOutlined, WomanOutlined, TeamOutlined, CalendarOutlined } from '@ant-design/icons';
 import { Pie } from '@ant-design/charts';
 import { useTheme } from '@/context/ThemeContext';
@@ -12,7 +12,7 @@ const { Text } = Typography;
 // Interfaz para los datos de estadísticas
 interface EstadisticasData {
   totalUsuarios: number;
-  generoStats: { genero: string; count: number }[];
+  generoStats: { Hombre: number; Mujer: number };
   statusStats: { status: string; count: number }[];
   grupoStats: { grupo: string; count: number }[];
   edadPromedio: number;
@@ -49,8 +49,16 @@ export default function DashboardPage() {
   }, []);
 
   // Calcular estadísticas de género
-  const usuariosHombres = estadisticas?.generoStats?.find(item => item.genero === 'masculino')?.count || 0;
-  const usuariosMujeres = estadisticas?.generoStats?.find(item => item.genero === 'femenino')?.count || 0;
+  const usuariosHombres = estadisticas?.generoStats?.Hombre || 0;
+  const usuariosMujeres = estadisticas?.generoStats?.Mujer || 0;
+
+  // Calcular porcentajes
+  const totalUsuarios = usuariosHombres + usuariosMujeres;
+  const porcentajeHombres = totalUsuarios > 0 ? (usuariosHombres / totalUsuarios) * 100 : 0;
+  const porcentajeMujeres = totalUsuarios > 0 ? (usuariosMujeres / totalUsuarios) * 100 : 0;
+
+  // Calcular diferencia de porcentaje
+  const diferenciaPorcentaje = Math.abs(porcentajeHombres - porcentajeMujeres);
 
   // Datos para el gráfico de género
   const datosGenero = [
@@ -110,7 +118,6 @@ export default function DashboardPage() {
               title="Total Usuarios"
               value={estadisticas?.totalUsuarios || 0}
               prefix={<TeamOutlined />}
-              valueStyle={{ color: '#1677ff' }}
             />
           </Card>
         </Col>
@@ -121,7 +128,6 @@ export default function DashboardPage() {
               value={estadisticas?.edadPromedio || 0}
               prefix={<CalendarOutlined />}
               suffix="años"
-              valueStyle={{ color: '#722ed1' }}
             />
           </Card>
         </Col>
@@ -129,9 +135,16 @@ export default function DashboardPage() {
           <Card>
             <Statistic
               title="Hombres / Mujeres"
-              value={`${usuariosHombres} / ${usuariosMujeres}`}
-              prefix={<Space><ManOutlined /><WomanOutlined /></Space>}
-              valueStyle={{ color: '#fa541c' }}
+              value={totalUsuarios}
+              formatter={() => (
+                <span>
+                  <ManOutlined style={{ color: '#1677ff' }} /> {usuariosHombres}
+                  <WomanOutlined style={{ color: '#ff4d4f', marginLeft: '8px' }} /> {usuariosMujeres}
+                  <Text style={{ marginLeft: '8px' }}>
+                    {diferenciaPorcentaje.toFixed(1)}%
+                  </Text>
+                </span>
+              )}
             />
           </Card>
         </Col>

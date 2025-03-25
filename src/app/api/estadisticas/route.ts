@@ -13,12 +13,19 @@ export async function GET() {
       throw new Error(`Error al obtener el total de usuarios: ${errorTotal.message}`);
     }
     
-    // Mockear conteo por género
-    const generoStats = [
-      { genero: 'masculino', count: 100 },
-      { genero: 'femenino', count: 120 }
-    ];
+    // Obtener conteo por género
+    const { data, error } = await supabase
+      .rpc('get_user_count_by_gender');
+      
+    if (error) {
+      console.error('Error al obtener el conteo de usuarios por género:', error);
+    }
     
+    const generoStats = (data || []).reduce((acc: Record<string, number>, { genero, count }: { genero: string, count: number }) => {
+      acc[genero] = count;
+      return acc;
+    }, {});
+        
     // Mockear conteo por estado
     const statusStats = [
       { status: 'active', count: 150 },
