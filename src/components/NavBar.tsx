@@ -174,7 +174,7 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
       )}
       
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        {isAuthenticated && isMobile && (
+        {isAuthenticated && isMobile() && (
           <Button
             type="text"
             icon={<MenuOutlined style={{ fontSize: '20px', color: themeMode === 'dark' ? 'white' : 'black' }} />}
