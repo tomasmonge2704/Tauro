@@ -1,25 +1,30 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getUserData } from "@/app/utils/getUserData";
+import { allowedRoutes } from "@/constants/routes";
 
 export async function middleware(req: NextRequest) {
   // Intentar obtener el token de NextAuth
-  const token = await getToken({ 
-    req, 
-    secret: process.env.NEXTAUTH_SECRET 
-  });
+  const user = await getUserData(req);
   
   // Rutas de autenticación (login)
-  const isLoginRoute = req.nextUrl.pathname.startsWith('/login');
-  
-  // Si no es la ruta de login y el usuario no está autenticado, redirigir al login
-  if (!isLoginRoute && !token) {
-    return NextResponse.redirect(new URL('/login', req.url));
-  }
-
-  // Si el usuario está autenticado y trata de acceder a la ruta de login, redirigir a la página principal
-  if (isLoginRoute && token) {
-    return NextResponse.redirect(new URL('/', req.url));
+  const isApiRoute = req.nextUrl.pathname.startsWith('/api');
+  const isAuthApiRoute = req.nextUrl.pathname.startsWith('/api/auth');
+  const isSecureRoute = allowedRoutes.includes(req.nextUrl.pathname);
+  // Verificar acceso a rutas de API para administradores
+  if (isApiRoute && !isAuthApiRoute && user && !isSecureRoute) {
+    // Verificar si el usuario es administrador (role === 1)
+    const userRole = user.rol as number;
+    if (userRole !== 0) {
+      // Si no es administrador, devolver respuesta 403 Forbidden
+      return new NextResponse(
+        JSON.stringify({ error: 'Acceso denegado. Solo administradores pueden acceder a esta API' }),
+        { 
+          status: 403, 
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
   }
 
   return NextResponse.next();
@@ -27,5 +32,8 @@ export async function middleware(req: NextRequest) {
 
 // Configurar las rutas en las que se ejecutará el middleware
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+    '/api/:path*'
+  ],
 }; 

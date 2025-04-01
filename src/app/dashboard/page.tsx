@@ -1,27 +1,38 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Layout, Card, Row, Col, Statistic, Spin, Typography, Alert } from 'antd';
+import { Layout, Card, Row, Col, Statistic, Spin, Typography, Alert, Tabs } from 'antd';
 import { ManOutlined, WomanOutlined, TeamOutlined, CalendarOutlined } from '@ant-design/icons';
 import { Pie } from '@ant-design/charts';
 import { useTheme } from '@/context/ThemeContext';
+import { convertirMoneda } from '../utils/convertirMoneda';
 
 const { Content } = Layout;
 const { Text } = Typography;
+const { TabPane } = Tabs;
 
 // Interfaz para los datos de estadísticas
 interface EstadisticasData {
-  totalUsuarios: number;
   generoStats: { Hombre: number; Mujer: number };
   statusStats: { status: string; count: number }[];
   grupoStats: { grupo: string; count: number }[];
   edadPromedio: number;
 }
 
+// Interfaz para los datos financieros
+interface FinanceData {
+  totalUsuarios: number;
+  totalRecaudado: number;
+  totalPagos: number;
+}
+
 export default function DashboardPage() {
   const [estadisticas, setEstadisticas] = useState<EstadisticasData | null>(null);
+  const [financeData, setFinanceData] = useState<FinanceData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [financeLoading, setFinanceLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [financeError, setFinanceError] = useState<string | null>(null);
   const { themeMode } = useTheme();
 
   useEffect(() => {
@@ -48,6 +59,31 @@ export default function DashboardPage() {
     fetchEstadisticas();
   }, []);
 
+  // Obtener datos financieros
+  useEffect(() => {
+    const fetchFinanceData = async () => {
+      try {
+        setFinanceLoading(true);
+        const response = await fetch('/api/estadisticas/finance');
+        
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setFinanceData(data);
+        setFinanceError(null);
+      } catch (error) {
+        console.error('Error al cargar datos financieros:', error);
+        setFinanceError('No se pudieron cargar los datos financieros. Por favor, intenta de nuevo más tarde.');
+      } finally {
+        setFinanceLoading(false);
+      }
+    };
+
+    fetchFinanceData();
+  }, []);
+
   // Calcular estadísticas de género
   const usuariosHombres = estadisticas?.generoStats?.Hombre || 0;
   const usuariosMujeres = estadisticas?.generoStats?.Mujer || 0;
@@ -56,7 +92,9 @@ export default function DashboardPage() {
   const totalUsuarios = usuariosHombres + usuariosMujeres;
   const porcentajeHombres = totalUsuarios > 0 ? (usuariosHombres / totalUsuarios) * 100 : 0;
   const porcentajeMujeres = totalUsuarios > 0 ? (usuariosMujeres / totalUsuarios) * 100 : 0;
-
+  const totalAlquiler = 3500000;
+  const costoUnitario = 10000;
+  const total_a_pagar = (totalUsuarios * costoUnitario) + totalAlquiler;
   // Calcular diferencia de porcentaje
   const diferenciaPorcentaje = Math.abs(porcentajeHombres - porcentajeMujeres);
 
@@ -82,89 +120,224 @@ export default function DashboardPage() {
       position: 'bottom' as const,
     },
     theme: themeMode === 'dark' ? 'dark' : 'light',
-    color: ['#1677ff', '#ff4d4f', '#722ed1', '#faad14'],
+    color: ['#1677ff', '#ff4d4f'],
   };
 
-  if (loading) {
-    return (
-      <Content style={{ padding: '24px', textAlign: 'center' }}>
-        <Spin size="large" tip="Cargando estadísticas...">
-          <div style={{ padding: '50px', background: 'rgba(0,0,0,0.05)' }} />
-        </Spin>
-      </Content>
-    );
-  }
+  // Renderizar el contenido del tab General
+  const renderGeneralContent = () => {
+    if (loading) {
+      return (
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          <Spin size="large" tip="Cargando estadísticas...">
+            <div style={{ padding: '50px', background: 'rgba(0,0,0,0.05)' }} />
+          </Spin>
+        </div>
+      );
+    }
 
-  if (error) {
-    return (
-      <Content style={{ padding: '24px' }}>
-        <Alert
-          message="Error"
-          description={error}
-          type="error"
-          showIcon
-        />
-      </Content>
-    );
-  }
+    if (error) {
+      return (
+        <div style={{ padding: '24px' }}>
+          <Alert
+            message="Error"
+            description={error}
+            type="error"
+            showIcon
+          />
+        </div>
+      );
+    }
 
-  return (
-    <Content>
-      {/* Tarjetas de estadísticas generales */}
-      <Row gutter={[16, 16]} style={{ width: '100%' }}>
-        <Col xs={24} sm={24} md={8} lg={8}>
-          <Card style={{ width: '100%' }}>
-            <Statistic
-              title="Total Usuarios"
-              value={estadisticas?.totalUsuarios || 0}
-              prefix={<TeamOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={24} md={8} lg={8}>
-          <Card>
-            <Statistic
-              title="Edad Promedio"
-              value={estadisticas?.edadPromedio || 0}
-              prefix={<CalendarOutlined />}
-              suffix="años"
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={24} md={8} lg={8}>
-          <Card>
-            <Statistic
-              title="Hombres / Mujeres"
-              value={totalUsuarios}
-              formatter={() => (
-                <span>
-                  <ManOutlined style={{ color: '#1677ff' }} /> {usuariosHombres}
-                  <WomanOutlined style={{ color: '#ff4d4f', marginLeft: '8px' }} /> {usuariosMujeres}
-                  <Text style={{ marginLeft: '8px' }}>
-                    {diferenciaPorcentaje.toFixed(1)}%
-                  </Text>
-                </span>
+    return (
+      <>
+        {/* Tarjetas de estadísticas generales */}
+        <Row gutter={[16, 16]} style={{ width: '100%' }}>
+          <Col xs={24} sm={24} md={8} lg={8}>
+            <Card style={{ width: '100%' }}>
+              <Statistic
+                title="Total Usuarios"
+                value={totalUsuarios}
+                prefix={<TeamOutlined />}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={24} md={8} lg={8}>
+            <Card>
+              <Statistic
+                title="Edad Promedio"
+                value={estadisticas?.edadPromedio || 0}
+                prefix={<CalendarOutlined />}
+                suffix="años"
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={24} md={8} lg={8}>
+            <Card>
+              <Statistic
+                title="Hombres / Mujeres"
+                value={totalUsuarios}
+                formatter={() => (
+                  <span>
+                    <ManOutlined style={{ color: '#1677ff' }} /> {usuariosHombres}
+                    <WomanOutlined style={{ color: '#ff4d4f', marginLeft: '8px' }} /> {usuariosMujeres}
+                    <Text style={{ marginLeft: '8px' }}>
+                      {diferenciaPorcentaje.toFixed(1)}%
+                    </Text>
+                  </span>
+                )}
+              />
+            </Card>
+          </Col>
+        </Row>
+        
+        {/* Gráficos */}
+        <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
+          <Col xs={24}>
+            <Card title="Distribución por Género">
+              {datosGenero.length > 0 ? (
+                <Pie {...configGenero} />
+              ) : (
+                <div style={{ textAlign: 'center', padding: '20px' }}>
+                  <Text type="secondary">No hay datos suficientes</Text>
+                </div>
               )}
-            />
-          </Card>
-        </Col>
-      </Row>
-      
-      {/* Gráficos */}
-      <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
-        <Col xs={24}>
-          <Card title="Distribución por Género">
-            {datosGenero.length > 0 ? (
-              <Pie {...configGenero} />
-            ) : (
-              <div style={{ textAlign: 'center', padding: '20px' }}>
-                <Text type="secondary">No hay datos suficientes</Text>
+            </Card>
+          </Col>
+        </Row>
+      </>
+    );
+  };
+
+  // Renderizar el contenido del tab de Reporte Financiero
+  const renderFinanceContent = () => {
+    if (financeLoading) {
+      return (
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          <Spin size="large" tip="Cargando datos financieros...">
+            <div style={{ padding: '50px', background: 'rgba(0,0,0,0.05)' }} />
+          </Spin>
+        </div>
+      );
+    }
+
+    if (financeError) {
+      return (
+        <div style={{ padding: '24px' }}>
+          <Alert
+            message="Error"
+            description={financeError}
+            type="error"
+            showIcon
+          />
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <Row gutter={[16, 16]} style={{ width: '100%' }}>
+          <Col xs={12} sm={6}>
+            <Card>
+              <Statistic
+                title="Total Usuarios"
+                value={totalUsuarios}
+                prefix={<TeamOutlined />}
+              />
+            </Card>
+          </Col>
+          <Col xs={12} sm={6}>
+            <Card>
+              <Statistic
+                title="Total Pagos Registrados"
+                value={financeData?.totalPagos || 0}
+              />
+            </Card>
+          </Col>
+          <Col xs={12} sm={6}>
+            <Card>
+              <Statistic
+                title="Total Recaudado"
+                value={convertirMoneda(financeData?.totalRecaudado || 0)}
+              />
+            </Card>
+          </Col>
+          <Col xs={12} sm={6}>
+            <Card>
+              <Statistic
+                title="Total a Recaudar"
+                value={convertirMoneda(total_a_pagar)}
+              />
+            </Card>
+          </Col>
+        </Row>
+        
+        <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
+          <Col xs={24}>
+            <Card title="Resumen Financiero">
+              <div style={{ padding: '20px', textAlign: 'center' }}>
+                <Statistic
+                  title="Balance"
+                  value={(financeData?.totalRecaudado || 0) - total_a_pagar}
+                  precision={2}
+                  valueStyle={{ 
+                    color: (financeData?.totalRecaudado || 0) > total_a_pagar ? '#3f8600' : '#cf1322' 
+                  }}
+                  prefix={(financeData?.totalRecaudado || 0) > total_a_pagar ? 
+                    <span>+</span> : <span>-</span>}
+                  formatter={(value) => convertirMoneda(Math.abs(Number(value)))}
+                />
+                <Text style={{ display: 'block', marginTop: '10px' }}>
+                  {(financeData?.totalRecaudado || 0) > total_a_pagar ? 
+                    'Recaudación superior a lo necesario' : 
+                    'Recaudación inferior a lo necesario'}
+                </Text>
+                
+                {/* Descripción del cálculo del total a recaudar */}
+                <div style={{ marginTop: '20px', textAlign: 'left', background: 'rgba(0,0,0,0.02)', padding: '20px', borderRadius: '8px' }}>                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' }}>
+                      <Text>Costo por persona</Text>
+                      <Text>
+                        {convertirMoneda(costoUnitario)} × {financeData?.totalUsuarios || 0} = <Text strong>{convertirMoneda((financeData?.totalUsuarios || 0) * costoUnitario)}</Text>
+                      </Text>
+                    </div>
+                    
+                    <div style={{ height: '1px', background: 'rgba(0,0,0,0.06)' }} />
+                    
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' }}>
+                      <Text>Costo de alquiler</Text>
+                      <Text strong>{convertirMoneda(totalAlquiler)}</Text>
+                    </div>
+                    
+                    <div style={{ height: '1px', background: 'rgba(0,0,0,0.06)' }} />
+                    
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', marginTop: '5px', background: 'rgba(0,0,0,0.03)', borderRadius: '4px' }}>
+                      <Text strong>Total a recaudar</Text>
+                      <Text strong style={{ fontSize: '16px' }}>
+                        {convertirMoneda(total_a_pagar)}
+                      </Text>
+                    </div>
+                  </div>
+                </div>
               </div>
-            )}
-          </Card>
-        </Col>
-      </Row>
-            
+            </Card>
+          </Col>
+        </Row>
+      </>
+    );
+  };
+  
+  return (
+    <Content style={{ padding: '16px' }}>
+      <Tabs defaultActiveKey="general" size="large">
+        <TabPane tab="General" key="general">
+          {renderGeneralContent()}
+        </TabPane>
+        <TabPane tab="Reporte Financiero" key="finance">
+          {renderFinanceContent()}
+        </TabPane>
+      </Tabs>
+      
       <div style={{ textAlign: 'center', marginTop: '24px' }}>
         <Text type="secondary">
           Última actualización: {new Date().toLocaleString()}

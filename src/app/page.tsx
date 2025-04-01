@@ -2,6 +2,8 @@
 
 import { Card, Row, Col, Statistic } from 'antd';
 import { useSession } from 'next-auth/react';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import { useRoleCheck } from '@/hooks/useRoleCheck';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { UserOutlined, TeamOutlined, CalendarOutlined, QrcodeOutlined } from '@ant-design/icons';
@@ -9,7 +11,7 @@ import { UserOutlined, TeamOutlined, CalendarOutlined, QrcodeOutlined } from '@a
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  
+  const { isAdmin } = useRoleCheck();
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
@@ -25,12 +27,13 @@ export default function Home() {
   }
   
   return (
-    <div style={{ width: '100%', maxWidth: '100%', overflowX: 'hidden' }}>
-      <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
-        <Col xs={24} sm={12} md={8}>
+    <ProtectedRoute>
+      <div style={{ width: '100%', maxWidth: '100%', overflowX: 'hidden' }}>
+        <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
+          <Col xs={24} sm={12} md={8}>
           <Card 
             hoverable
-            onClick={() => router.push(`/users/${session.user.id}`)}
+            onClick={() => router.push(`/profile`)}
             style={{ width: '100%' }}
           >
             <Statistic 
@@ -41,7 +44,7 @@ export default function Home() {
             />
           </Card>
         </Col>
-        
+        {isAdmin && (
         <Col xs={24} sm={12} md={8}>
           <Card 
             hoverable
@@ -56,7 +59,8 @@ export default function Home() {
             />
           </Card>
         </Col>
-        
+        )}
+        {isAdmin && (
         <Col xs={24} sm={12} md={8}>
           <Card 
             hoverable
@@ -71,22 +75,24 @@ export default function Home() {
             />
           </Card>
         </Col>
-        
-        <Col xs={24} sm={12} md={8}>
-          <Card 
-            hoverable
-            onClick={() => router.push('/scan-qr')}
-            style={{ width: '100%' }}
+        )}
+        {isAdmin && (
+          <Col xs={24} sm={12} md={8}>
+            <Card 
+              hoverable
+              onClick={() => router.push('/verificar-qr')}
+              style={{ width: '100%' }}
           >
             <Statistic 
               title="Escanear QR" 
               value="Abrir escáner" 
               prefix={<QrcodeOutlined />} 
-              valueStyle={{ color: '#722ed1' }}
             />
           </Card>
         </Col>
+        )}
       </Row>
     </div>
+    </ProtectedRoute>
   );
 }

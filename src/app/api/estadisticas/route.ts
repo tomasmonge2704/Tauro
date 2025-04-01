@@ -25,27 +25,13 @@ export async function GET() {
       acc[genero] = count;
       return acc;
     }, {});
-        
-    // Mockear conteo por estado
-    const statusStats = [
-      { status: 'active', count: 150 },
-      { status: 'inactive', count: 50 }
-    ];
-    
-    // Mockear conteo por grupo
-    const grupoStats = [
-      { grupo: 'grupo1', count: 80 },
-      { grupo: 'grupo2', count: 90 }
-    ];
-    
+
     // Mockear edad promedio
-    const edadPromedio = 30;
+    const edadPromedio = 0;
     
     return NextResponse.json({
       totalUsuarios: totalUsuarios[0]?.count || 0,
       generoStats,
-      statusStats,
-      grupoStats,
       edadPromedio
     });
     

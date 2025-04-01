@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { isMobile } from '@/app/utils/isMobile';
 import { useState } from 'react';
+import { useRoleCheck } from '@/hooks/useRoleCheck';
 
 const { Header } = Layout;
 const { Title, Text } = Typography;
@@ -21,7 +22,7 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
   const { themeMode, toggleTheme } = useTheme();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
-  
+  const { isAdmin } = useRoleCheck();
   const isLoading = status === 'loading';
   const isAuthenticated = status === 'authenticated';
 
@@ -35,9 +36,7 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
   };
 
   const handleViewProfile = () => {
-    if (session?.user?.id) {
-      router.push(`/users/${session.user.id}`);
-    }
+    router.push(`/profile`);
   };
 
   const menuItems = {
@@ -108,6 +107,7 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
       ),
     },
     {
+      adminOnly: true,
       key: 'users',
       label: (
         <Link href="/users" style={{ color: 'inherit' }}>
@@ -116,6 +116,7 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
       ),
     },
     {
+      adminOnly: true,
       key: 'dashboard',
       label: (
         <Link href="/dashboard" style={{ color: 'inherit' }}>
@@ -124,6 +125,7 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
       ),
     },
     {
+      adminOnly: true,
       key: 'verificar-qr',
       label: (
         <Link href="/verificar-qr" style={{ color: 'inherit' }}>
@@ -132,7 +134,7 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
       ),
       icon: <QrcodeOutlined />
     },
-  ];
+  ].filter(item => isAdmin || !item.adminOnly);
 
   return (
     <Header
@@ -159,7 +161,7 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
         </Link>
       </div>
       
-      {isAuthenticated && !isMobile() && (
+      {isAuthenticated && !isMobile() && navItems.length > 1 && (
         <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
           <Menu
             mode="horizontal"
@@ -168,6 +170,7 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
               borderBottom: 'none',
               color: themeMode === 'dark' ? 'white' : 'black'
             }}
+            
             items={navItems}
           />
         </div>

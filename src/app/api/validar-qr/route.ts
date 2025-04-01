@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import jwt from 'jsonwebtoken';
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,26 +9,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Token QR no proporcionado' }, { status: 400 });
     }
     
-    // Obtener el secret de NextAuth
-    const JWT_SECRET = process.env.NEXTAUTH_SECRET;
-    if (!JWT_SECRET) {
-      console.error('NEXTAUTH_SECRET no está configurado');
-      return NextResponse.json({ error: 'Error de configuración del servidor' }, { status: 500 });
-    }
-    
-    try {
-      // Verificar y decodificar el token
-      const decodedToken = jwt.verify(qrToken, JWT_SECRET) as jwt.JwtPayload & {
-        id: string;
-        createdAt: string;
-        timestamp: string;
-      };
-      
+    try {      
       // Buscar el usuario para confirmar que existe y verificar su fecha de creación
-      const { data: usuario, error } = await supabase
+      const { error } = await supabase
         .from('users')
-        .select('id, nombre, email, created_at, status, genero, grupo')
-        .eq('id', decodedToken.id)
+        .select('id')
+        .eq('id', qrToken)
         .single();
       
       if (error) {
@@ -40,30 +25,26 @@ export async function POST(request: NextRequest) {
         }, { status: 404 });
       }
       
-      // Verificar que la fecha de creación en el token coincide con la del usuario
-      if (new Date(decodedToken.createdAt).toISOString() !== new Date(usuario.created_at).toISOString()) {
+      // Actualizar el usuario para indicar que el QR ha sido escaneado
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ qr_scanned_at: new Date().toISOString() })
+        .eq('id', qrToken);
+      
+      if (updateError) {
+        console.error('Error al actualizar usuario:', updateError);
         return NextResponse.json({ 
           valid: false, 
-          error: 'Información de QR no válida' 
-        }, { status: 400 });
+          error: 'Error al actualizar usuario' 
+        }, { status: 500 });
       }
       
-      // Si todo está bien, el QR es válido
       return NextResponse.json({ 
         valid: true,
-        usuario: {
-          id: usuario.id,
-          nombre: usuario.nombre,
-          email: usuario.email,
-          status: usuario.status,
-          genero: usuario.genero,
-          grupo: usuario.grupo,
-          created_at: usuario.created_at
-        }
       });
       
-    } catch (jwtError) {
-      console.error('Error al verificar token JWT:', jwtError);
+    } catch (error) {
+      console.error('Error al verificar token QR:', error);
       return NextResponse.json({ 
         valid: false, 
         error: 'Token QR inválido o expirado' 

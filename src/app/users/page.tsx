@@ -1,6 +1,5 @@
 'use client';
 
-import ProtectedRoute from '@/components/ProtectedRoute';
 import { Layout, Table, Modal, Form, Input, Button, message, Space, Select, Pagination, Input as AntInput, Row, Col, Card, Slider, Tag, Popconfirm, Badge, Tooltip } from 'antd';
 import { useState, useEffect } from 'react';
 import { EditOutlined, DeleteOutlined, UserAddOutlined, SearchOutlined, FilterOutlined, ClearOutlined, WarningOutlined } from '@ant-design/icons';
@@ -10,10 +9,10 @@ import { useRouter } from 'next/navigation';
 import { 
   OPCIONES_GENERO, 
   OPCIONES_STATUS, 
-  OPCIONES_GRUPO, 
   getGrupoColor,
 } from '@/constants/options';
 import { isMobile } from '@/app/utils/isMobile';
+import { convertirMoneda } from '../utils/convertirMoneda';
 
 const { Content } = Layout;
 const { Option } = Select;
@@ -378,12 +377,25 @@ export default function UsersPage() {
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => {
-        let color = 'green';
-        if (status === 'Inactivo') color = 'red';
-        if (status === 'Pendiente') color = 'orange';
-        return <Tag color={color}>{status}</Tag>;
+        const statusOption = OPCIONES_STATUS.find(opt => opt.value === status || opt.label === status);
+        const color = statusOption?.color || 'default';
+        return <Tag color={color}>{statusOption?.label || status}</Tag>;
       },
       sorter: (a: Usuario, b: Usuario) => a.status?.localeCompare(b.status),
+      responsive: ['md', 'lg', 'xl'],
+    },
+    {
+      title: 'Monto Pagado',
+      dataIndex: 'monto_pago',
+      key: 'monto_pago',
+      render: (monto_pago: number) => (
+        monto_pago > 0 ? <Tag color='success'>
+          {convertirMoneda(monto_pago)}
+        </Tag> : <Tag color='warning'>
+          No realizó el pago
+        </Tag>
+      ),
+      sorter: (a: Usuario, b: Usuario) => (a.monto_pago || 0) - (b.monto_pago || 0),
       responsive: ['md', 'lg', 'xl'],
     },
     {
@@ -478,7 +490,6 @@ export default function UsersPage() {
   };
 
   return (
-    <ProtectedRoute>
         <Content> 
           <div style={{ marginBottom: 16 }}>
             <Row gutter={[16, 16]}>
@@ -547,15 +558,10 @@ export default function UsersPage() {
                   </Col>
                   <Col span={8}>
                     <Form.Item name="grupo" label="Grupo">
-                      <Select 
-                        placeholder="Selecciona un grupo" 
-                        allowClear
+                      <Input 
+                        placeholder="Ingresa un grupo" 
                         style={{ width: '100%' }}
-                      >
-                        {OPCIONES_GRUPO.map(opcion => (
-                          <Option key={opcion.value} value={opcion.value}>{opcion.label}</Option>
-                        ))}
-                      </Select>
+                      />
                     </Form.Item>
                   </Col>
                   <Col span={8}>
@@ -624,7 +630,7 @@ export default function UsersPage() {
                 <Form.Item name="email" label="Email" rules={[{ required: true, message: 'Por favor ingresa el email', type: 'email' }]}>
                   <Input />
                 </Form.Item>
-                <Form.Item name="rol" label="Rol">
+                <Form.Item name="monto_pago" label="Monto Pagado">
                   <Input type="number" />
                 </Form.Item>
                 <Form.Item name="edad" label="Edad">
@@ -645,11 +651,7 @@ export default function UsersPage() {
                   </Select>
                 </Form.Item>
                 <Form.Item name="grupo" label="Grupo">
-                  <Select placeholder="Selecciona un grupo" allowClear>
-                    {OPCIONES_GRUPO.map(opcion => (
-                      <Option key={opcion.value} value={opcion.value}>{opcion.label}</Option>
-                    ))}
-                  </Select>
+                  <Input placeholder="Ingresa un grupo" />
                 </Form.Item>
                 <Form.Item>
                   <Button type="primary" htmlType="submit" loading={loading}>
@@ -681,7 +683,7 @@ export default function UsersPage() {
               <Form.Item name="email" label="Email" rules={[{ required: true, message: 'Por favor ingresa el email', type: 'email' }]}>
                 <Input />
               </Form.Item>
-              <Form.Item name="rol" label="Rol" initialValue={0}>
+              <Form.Item name="monto_pago" label="Monto Pagado">
                 <Input type="number" />
               </Form.Item>
               <Form.Item name="edad" label="Edad" initialValue={25}>
@@ -702,11 +704,7 @@ export default function UsersPage() {
                 </Select>
               </Form.Item>
               <Form.Item name="grupo" label="Grupo">
-                <Select placeholder="Selecciona un grupo" allowClear>
-                  {OPCIONES_GRUPO.map(opcion => (
-                    <Option key={opcion.value} value={opcion.value}>{opcion.label}</Option>
-                  ))}
-                </Select>
+                <Input placeholder="Ingresa un grupo" />
               </Form.Item>
               <Form.Item>
                 <Button type="primary" htmlType="submit" loading={loading}>
@@ -719,6 +717,5 @@ export default function UsersPage() {
             </Form>
           </Modal>
         </Content>
-    </ProtectedRoute>
   );
 }

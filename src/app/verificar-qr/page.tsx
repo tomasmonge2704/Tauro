@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Layout, Card, Button, Result, Spin, Typography, Descriptions, Tag, Space, Alert } from 'antd';
+import { Layout, Card, Button, Result, Spin, Typography, Tag, Space, Alert } from 'antd';
 import { CameraOutlined, QrcodeOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useTheme } from '@/context/ThemeContext';
 import QrScanner from 'qr-scanner';
@@ -9,19 +9,8 @@ import QrScanner from 'qr-scanner';
 const { Content } = Layout;
 const { Text } = Typography;
 
-interface UsuarioQR {
-  id: string;
-  nombre: string;
-  email: string;
-  status: string;
-  genero: string;
-  grupo: string;
-  created_at: string;
-}
-
 interface VerificacionQR {
   valid: boolean;
-  usuario?: UsuarioQR;
   error?: string;
 }
 
@@ -34,6 +23,7 @@ export default function VerificarQRPage() {
   const { themeMode } = useTheme();
   const scannerRef = useRef<QrScanner | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [mensajeEstado, setMensajeEstado] = useState<string>('Listo para escanear');
 
   useEffect(() => {
     // Verificar permisos de cámara al cargar el componente
@@ -64,26 +54,33 @@ export default function VerificarQRPage() {
     try {
       setEscaneando(true);
       setError(null);
+      setMensajeEstado('Escaneando...');
 
       if (!scannerRef.current && videoRef.current) {
         scannerRef.current = new QrScanner(
           videoRef.current,
           (result) => {
+            console.log('QR detectado:', result);
             procesarResultadoQR(result.data);
           },
           {
             highlightScanRegion: true,
+            highlightCodeOutline: true,
+            preferredCamera: 'environment',
+            maxScansPerSecond: 5,
           }
         );
       }
 
       if (scannerRef.current) {
         await scannerRef.current.start();
+        console.log('Escáner iniciado correctamente');
       }
     } catch (err) {
       console.error('Error al iniciar el escáner:', err);
       setError('Error al iniciar el escáner. Inténtalo de nuevo.');
       setEscaneando(false);
+      setMensajeEstado('Error al iniciar el escáner');
     }
   };
 
@@ -91,6 +88,7 @@ export default function VerificarQRPage() {
     if (scannerRef.current) {
       scannerRef.current.stop();
       setEscaneando(false);
+      setMensajeEstado('Escaneo detenido');
     }
   };
 
@@ -98,7 +96,8 @@ export default function VerificarQRPage() {
     try {
       detenerEscaneo();
       setVerificando(true);
-      
+      setMensajeEstado('Verificando código QR...');
+      console.log(qrToken);
       // Enviar el token al servidor para verificación
       const response = await fetch('/api/validar-qr', {
         method: 'POST',
@@ -110,58 +109,23 @@ export default function VerificarQRPage() {
       
       const data: VerificacionQR = await response.json();
       setResultado(data);
+      setMensajeEstado(data.valid ? 'Verificación exitosa!' : `Error: ${data.error || 'QR no válido'}`);
     } catch (error) {
       console.error('Error al verificar QR:', error);
       setResultado({
         valid: false,
         error: 'Error al procesar el código QR'
       });
+      setMensajeEstado('Error al procesar el código QR');
     } finally {
       setVerificando(false);
     }
   };
 
-  // Función para renderizar el tag de estado
-  const renderStatusTag = (status: string) => {
-    let color = 'green';
-    if (status === 'Inactivo') color = 'red';
-    if (status === 'Pendiente') color = 'orange';
-    return <Tag color={color}>{status}</Tag>;
-  };
-
-  // Función para renderizar el tag de género
-  const renderGenderTag = (genero: string) => {
-    let color = 'blue';
-    if (genero === 'Mujer') color = 'pink';
-    if (genero === 'No binario') color = 'purple';
-    if (genero === 'Prefiere no decir') color = 'gray';
-    return <Tag color={color}>{genero}</Tag>;
-  };
-
-  // Función para obtener el color del tag según el grupo
-  const getGrupoColor = (grupo: string): string => {
-    switch (grupo) {
-      case 'Administración':
-        return 'blue';
-      case 'Ventas':
-        return 'green';
-      case 'Marketing':
-        return 'purple';
-      case 'Desarrollo':
-        return 'cyan';
-      case 'Soporte':
-        return 'orange';
-      case 'Recursos Humanos':
-        return 'pink';
-      default:
-        return 'default';
-    }
-  };
-
   return (
-    <Content style={{ padding: '24px' }}>
-      <Card
-        style={{ 
+      <Content style={{ padding: '24px' }}>
+        <Card
+          style={{ 
           width: '100%',
           maxWidth: '500px', 
           margin: '0 auto',
@@ -183,7 +147,7 @@ export default function VerificarQRPage() {
           />
         ) : verificando ? (
           <div style={{ textAlign: 'center', padding: '20px' }}>
-            <Spin tip="Verificando código QR...">
+            <Spin tip={mensajeEstado}>
               <div style={{ height: '100px' }} />
             </Spin>
           </div>
@@ -192,38 +156,21 @@ export default function VerificarQRPage() {
             <Result
               status="success"
               title="¡QR Verificado Correctamente!"
-              subTitle={`Usuario identificado: ${resultado.usuario?.nombre}`}
+              subTitle={mensajeEstado}
               extra={[
                 <Button 
                   type="primary" 
                   key="scan-again" 
                   icon={<ReloadOutlined />}
-                  onClick={() => setResultado(null)}
+                  onClick={() => {
+                    setResultado(null);
+                    setMensajeEstado('Listo para escanear');
+                  }}
                 >
                   Verificar otro código
                 </Button>,
               ]}
             >
-              <Descriptions
-                title="Información del Usuario"
-                bordered
-                column={1}
-                size="small"
-                style={{ marginTop: '16px' }}
-              >
-                <Descriptions.Item label="Nombre">{resultado.usuario?.nombre}</Descriptions.Item>
-                <Descriptions.Item label="Email">{resultado.usuario?.email}</Descriptions.Item>
-                <Descriptions.Item label="Status">{renderStatusTag(resultado.usuario?.status || '')}</Descriptions.Item>
-                <Descriptions.Item label="Género">{renderGenderTag(resultado.usuario?.genero || '')}</Descriptions.Item>
-                <Descriptions.Item label="Grupo">
-                  {resultado.usuario?.grupo ? (
-                    <Tag color={getGrupoColor(resultado.usuario.grupo)}>{resultado.usuario.grupo}</Tag>
-                  ) : "—"}
-                </Descriptions.Item>
-                <Descriptions.Item label="Creado">
-                  {resultado.usuario?.created_at ? new Date(resultado.usuario.created_at).toLocaleString() : "—"}
-                </Descriptions.Item>
-              </Descriptions>
             </Result>
           ) : (
             <Result
@@ -235,7 +182,10 @@ export default function VerificarQRPage() {
                   type="primary" 
                   key="scan-again" 
                   icon={<ReloadOutlined />}
-                  onClick={() => setResultado(null)}
+                  onClick={() => {
+                    setResultado(null);
+                    setMensajeEstado('Listo para escanear');
+                  }}
                 >
                   Intentar de nuevo
                 </Button>,
@@ -266,10 +216,19 @@ export default function VerificarQRPage() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                position: 'relative'
               }}
             >
-              <video ref={videoRef} style={{ display: escaneando ? 'block' : 'none', width: '100%' }} />
+              <video 
+                ref={videoRef} 
+                style={{ 
+                  display: escaneando ? 'block' : 'none', 
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }} 
+              />
               {!escaneando && (
                 <Text type="secondary" style={{ textAlign: 'center' }}>
                   <QrcodeOutlined style={{ fontSize: '32px', marginBottom: '8px', display: 'block' }} />
@@ -280,11 +239,11 @@ export default function VerificarQRPage() {
             
             {escaneando && (
               <div style={{ textAlign: 'center', marginTop: '16px' }}>
-                <Space>
+                <Space direction="vertical">
                   <Button onClick={detenerEscaneo}>Detener</Button>
-                  <Text type="secondary">
-                    <CameraOutlined /> Escaneando...
-                  </Text>
+                  <Tag color="processing" icon={<CameraOutlined />}>
+                    {mensajeEstado}
+                  </Tag>
                 </Space>
               </div>
             )}

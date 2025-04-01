@@ -34,7 +34,7 @@ export default function LoginPage() {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`/api/usuarios/check-email?email=${encodeURIComponent(values.email)}`);
+      const response = await fetch(`/api/auth/check-email?email=${encodeURIComponent(values.email)}`);
       
       if (!response.ok) {
         throw new Error('Error al verificar el email');

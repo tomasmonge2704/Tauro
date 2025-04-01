@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "@/components/Providers";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import { NavBarWrapper } from "@/components/NavBarWrapper";
-
 export const metadata: Metadata = {
   title: "TAURO",
   description: "La mejor fiesta del año.",
@@ -17,9 +17,11 @@ export default function RootLayout({
     <html lang="es">
       <body>
         <Providers>
-          <NavBarWrapper>
-            {children}
-          </NavBarWrapper>
+          <ProtectedRoute>
+            <NavBarWrapper>
+              {children}
+            </NavBarWrapper>
+          </ProtectedRoute>
         </Providers>
       </body>
     </html>

@@ -77,7 +77,7 @@ export function NavBarWrapper({ children }: NavBarWrapperProps) {
         maxWidth: '100%',
         overflowX: 'hidden'
       }}>
-        {!isLoginPage && isDesktop && (
+        {!isLoginPage && isDesktop && pathname !== '/' && (
           <Breadcrumb 
             items={generateBreadcrumbItems()}
             style={{ 

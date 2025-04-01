@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { getUserData } from '@/app/utils/getUserData';
 
 type tParams = Promise<{
   id: string;
@@ -39,13 +40,14 @@ export async function PUT(
     const updated_at = new Date().toISOString();
     const datosActualizados = await request.json();
     
-    console.log('ID del usuario a actualizar:', id);
-    console.log('Datos a actualizar:', datosActualizados);
+    // Obtener los datos del usuario que está haciendo la petición
+    const user = await getUserData(request);
+    const updated_by = user?.nombre;
     
-    // Actualizar el usuario - modificar para manejar el caso de 0 filas
+    // Actualizar el usuario incluyendo quien hizo la actualización
     const { data, error } = await supabase
       .from('users')
-      .update({ ...datosActualizados, updated_at })
+      .update({ ...datosActualizados, updated_at, updated_by })
       .eq('id', id)
       .select();
     

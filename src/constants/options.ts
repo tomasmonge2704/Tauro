@@ -4,29 +4,16 @@
 export const OPCIONES_GENERO = [
   { value: 'Hombre', label: 'Masculino' },
   { value: 'Mujer', label: 'Femenino' },
-  { value: 'No binario', label: 'No binario' },
-  { value: 'Prefiere no decir', label: 'Prefiere no decir' }
 ];
 
+export const STATUS_PAID_COMPLETED = 'ya_pago';
+export const STATUS_WAITING_PAYMENT = 'esperando_pago';
 /**
  * Opciones para los selectores de estado
  */
 export const OPCIONES_STATUS = [
-  { value: 'Activo', label: 'Activo' },
-  { value: 'Inactivo', label: 'Inactivo' },
-  { value: 'Pendiente', label: 'Pendiente' }
-];
-
-/**
- * Opciones para los selectores de grupo
- */
-export const OPCIONES_GRUPO = [
-  { value: 'Administración', label: 'Administración' },
-  { value: 'Ventas', label: 'Ventas' },
-  { value: 'Marketing', label: 'Marketing' },
-  { value: 'Desarrollo', label: 'Desarrollo' },
-  { value: 'Soporte', label: 'Soporte' },
-  { value: 'Recursos Humanos', label: 'Recursos Humanos' }
+  { value: STATUS_WAITING_PAYMENT, label: 'Esperando Pago', color: 'warning', label2: 'Pago pendiente', icon: 'credit-card' },
+  { value: STATUS_PAID_COMPLETED, label: 'Ya Pago', color: 'success', label2: 'Pago realizado', icon: 'check-circle' },
 ];
 
 /**
@@ -64,15 +51,3 @@ export const getGrupoColor = (grupo: string): string => {
     default: return 'default';
   }
 };
-
-/**
- * Función para obtener el color de un estado
- */
-export const getStatusColor = (status: string): string => {
-  switch (status) {
-    case 'Activo': return 'success';
-    case 'Inactivo': return 'error';
-    case 'Pendiente': return 'warning';
-    default: return 'default';
-  }
-}; 
