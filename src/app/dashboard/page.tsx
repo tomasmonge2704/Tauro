@@ -94,7 +94,8 @@ export default function DashboardPage() {
   const porcentajeMujeres = totalUsuarios > 0 ? (usuariosMujeres / totalUsuarios) * 100 : 0;
   const totalAlquiler = 3500000;
   const costoUnitario = 10000;
-  const total_a_pagar = (totalUsuarios * costoUnitario) + totalAlquiler;
+  const totalInvitados = totalUsuarios * costoUnitario;
+  const total_a_pagar = totalInvitados + totalAlquiler;
   // Calcular diferencia de porcentaje
   const diferenciaPorcentaje = Math.abs(porcentajeHombres - porcentajeMujeres);
 
@@ -297,8 +298,8 @@ export default function DashboardPage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' }}>
                       <Text>Costo por persona</Text>
-                      <Text>
-                        {convertirMoneda(costoUnitario)} × {financeData?.totalUsuarios || 0} = <Text strong>{convertirMoneda((financeData?.totalUsuarios || 0) * costoUnitario)}</Text>
+                        <Text>
+                            {convertirMoneda(costoUnitario)} × {totalUsuarios} = <Text strong>{convertirMoneda(totalInvitados)}</Text>
                       </Text>
                     </div>
                     
