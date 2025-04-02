@@ -28,71 +28,75 @@ export default function Home() {
   
   return (
     <ProtectedRoute>
-      <div style={{ width: '100%', maxWidth: '100%', overflowX: 'hidden' }}>
-        <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
-          <Col xs={24} sm={12} md={8}>
-          <Card 
-            hoverable
-            onClick={() => router.push(`/profile`)}
-            style={{ width: '100%' }}
-          >
-            <Statistic 
-              title="Mi Perfil" 
-              value="Ver Detalles" 
-              prefix={<UserOutlined />} 
-              valueStyle={{ color: '#1677ff' }}
-            />
-          </Card>
-        </Col>
-        {isAdmin && (
-        <Col xs={24} sm={12} md={8}>
-          <Card 
-            hoverable
-            onClick={() => router.push('/users')}
-            style={{ width: '100%' }}
-          >
-            <Statistic 
-              title="Usuarios" 
-              value="Gestionar" 
-              prefix={<TeamOutlined />} 
-              valueStyle={{ color: '#1677ff' }}
-            />
-          </Card>
-        </Col>
-        )}
-        {isAdmin && (
-        <Col xs={24} sm={12} md={8}>
-          <Card 
-            hoverable
-            onClick={() => router.push('/dashboard')}
-            style={{ width: '100%' }}
-          >
-            <Statistic 
-              title="Dashboard" 
-              value="Ver Estadísticas" 
-              prefix={<CalendarOutlined />} 
-              valueStyle={{ color: '#1677ff' }}
-            />
-          </Card>
-        </Col>
-        )}
-        {isAdmin && (
+      <div style={{ width: '100%' }}>
+        <Row 
+          gutter={[16, 16]} 
+          style={{ marginTop: '24px' }}
+          justify={!isAdmin ? "center" : "start"}
+        >
           <Col xs={24} sm={12} md={8}>
             <Card 
               hoverable
-              onClick={() => router.push('/verificar-qr')}
+              onClick={() => router.push(`/profile`)}
               style={{ width: '100%' }}
-          >
-            <Statistic 
-              title="Escanear QR" 
-              value="Abrir escáner" 
-              prefix={<QrcodeOutlined />} 
-            />
-          </Card>
-        </Col>
-        )}
-      </Row>
-    </div>
+            >
+              <Statistic 
+                title="Mi Perfil" 
+                value="Ver Detalles" 
+                prefix={<UserOutlined />} 
+                valueStyle={{ color: '#1677ff' }}
+              />
+            </Card>
+          </Col>
+          {isAdmin && (
+          <Col xs={24} sm={12} md={8}>
+            <Card 
+              hoverable
+              onClick={() => router.push('/users')}
+              style={{ width: '100%' }}
+            >
+              <Statistic 
+                title="Usuarios" 
+                value="Gestionar" 
+                prefix={<TeamOutlined />} 
+                valueStyle={{ color: '#1677ff' }}
+              />
+            </Card>
+          </Col>
+          )}
+          {isAdmin && (
+          <Col xs={24} sm={12} md={8}>
+            <Card 
+              hoverable
+              onClick={() => router.push('/dashboard')}
+              style={{ width: '100%' }}
+            >
+              <Statistic 
+                title="Dashboard" 
+                value="Ver Estadísticas" 
+                prefix={<CalendarOutlined />} 
+                valueStyle={{ color: '#1677ff' }}
+              />
+            </Card>
+          </Col>
+          )}
+          {isAdmin && (
+            <Col xs={24} sm={12} md={8}>
+              <Card 
+                hoverable
+                onClick={() => router.push('/verificar-qr')}
+                style={{ width: '100%' }}
+              >
+                <Statistic 
+                  title="Escanear QR" 
+                  value="Abrir escáner" 
+                  prefix={<QrcodeOutlined />} 
+                />
+              </Card>
+            </Col>
+          )}
+        </Row>
+      </div>
     </ProtectedRoute>
   );
 }

@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { ConfigProvider, theme } from 'antd';
+import { antThemeTokens, componentOverrides } from '@/styles/theme';
 
 type ThemeMode = 'light' | 'dark';
 
@@ -35,10 +36,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Configuración del tema de Ant Design
   const themeConfig = {
     algorithm: themeMode === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm,
-    token: {
-      // Personaliza colores aquí si es necesario
-      colorPrimary: '#1677ff',
-    },
+    token: antThemeTokens[themeMode],
+    components: componentOverrides,
   };
 
   return (
