@@ -15,7 +15,6 @@ interface NavBarWrapperProps {
 export function NavBarWrapper({ children }: NavBarWrapperProps) {
   const { themeMode } = useTheme();
   const pathname = usePathname();
-  const pageTitle = 'TAURO';
   const isLoginPage = pathname === '/login';
   
   return (
@@ -23,7 +22,7 @@ export function NavBarWrapper({ children }: NavBarWrapperProps) {
       minHeight: '100vh', 
       backgroundColor: themeMode === 'dark' ? '#141414' : '#f0f0f0',
     }}>
-      {!isLoginPage && <NavBar title={pageTitle} />}
+      {!isLoginPage && <NavBar />}
       <Content style={{ 
         padding: isLoginPage ? 0 : '24px',
         marginTop: '80px',
