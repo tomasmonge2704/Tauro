@@ -226,7 +226,7 @@ export default function VerificarQRPage() {
                   display: escaneando ? 'block' : 'none', 
                   width: '100%',
                   height: '100%',
-                  objectFit: 'cover'
+                  position: 'absolute',
                 }} 
               />
               {!escaneando && (
