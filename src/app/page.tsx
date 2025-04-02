@@ -4,7 +4,8 @@ import { useSession } from 'next-auth/react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { Typography } from 'antd';
+import { Typography, Button } from 'antd';
+import Link from 'next/link';
 import { isMobile } from '@/app/utils/isMobile';
 import { useTheme } from '@/context/ThemeContext';
 const { Title } = Typography;
@@ -41,6 +42,25 @@ export default function Home() {
         whiteSpace: 'nowrap',
         overflow: 'visible'
       }}>TAURO</Title>
+      <div style={{
+        display: isMobile() ? 'grid' : 'flex',
+        justifyContent: 'center',
+        left: '50%',
+        transform: 'translate(-50%, 0)',
+        gap: '20px',
+        position: 'absolute',
+        bottom: '10vh',
+      }}>
+        <Link href='/profile'>
+          <Button type='dashed' style={{ height: '40px', width: '100%' }}>Ver Perfil</Button>
+        </Link>
+        <Link href='/'>
+          <Button type='dashed' style={{ height: '40px', width: '100%' }}>Información del Evento</Button>
+        </Link>
+        <Link href='/'>
+          <Button type='dashed' style={{ height: '40px', width: '100%' }}>Contacto</Button>
+        </Link>
+      </div>
     </ProtectedRoute>
   );
 }

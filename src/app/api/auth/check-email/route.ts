@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     // Buscar el usuario por email
     const { data, error } = await supabase
       .from('users')
-      .select('id, password')
+      .select('id, password, rol')
       .eq('email', email)
       .single();
     
@@ -29,7 +29,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       exists,
       hasPassword,
-      userId: exists ? data.id : undefined
+      userId: exists ? data.id : undefined,
+      isAdmin: data?.rol === 0
     });
   } catch (error) {
     console.error('Error inesperado:', error);

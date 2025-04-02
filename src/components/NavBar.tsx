@@ -97,7 +97,7 @@ export const NavBar = () => {
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
           backdropFilter: 'blur(8px)',
           margin: '0 auto',
-          width: !isMobile() ? '30%' : '',
+          width: !isMobile() ? '40%' : '',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center' }}>

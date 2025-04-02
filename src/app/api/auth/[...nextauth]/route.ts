@@ -24,12 +24,18 @@ const AuthOptions: NextAuthOptions = {
             .select('*')
             .eq('email', credentials.email)
             .single();
-          
+           
           if (error || !user) {
             console.error("Usuario no encontrado:", error);
-            return null;
+            return user;
           }
           
+          const isAdmin = user?.rol === 0;
+          if (user && !isAdmin) {
+            delete user.password;
+            return user;
+          }
+        
           // Verificar si el usuario tiene contraseña
           if (!user.password) {
             console.error("Usuario sin contraseña");

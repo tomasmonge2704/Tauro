@@ -15,6 +15,7 @@ interface EmailCheckResponse {
   exists: boolean;
   hasPassword: boolean;
   userId?: string;
+  isAdmin?: boolean;
 }
 
 export default function LoginPage() {
@@ -49,6 +50,19 @@ export default function LoginPage() {
         if (data.userId) {
           setUserId(data.userId);
         }
+
+        // Si no es administrador, iniciar sesión directamente
+        if (data.isAdmin === false) {
+          await signIn('credentials', {
+            redirect: true,
+            callbackUrl: '/',
+            email: values.email,
+            password: 'dsad', // No es necesaria la contraseña para usuarios no admin
+          });
+          return; // Terminar aquí ya que signIn redirigirá
+        }
+
+        // Si es administrador, continuar al paso de contraseña
         setCurrentStep(1);
       } else {
         setError('No existe un usuario con este email. Por favor, contacta al administrador.');
