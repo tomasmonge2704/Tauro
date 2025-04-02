@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Layout, Card, Row, Col, Statistic, Spin, Typography, Alert, Tabs } from 'antd';
+import { Layout, Card, Row, Col, Statistic, Spin, Typography, Alert, Tabs, Collapse } from 'antd';
 import { ManOutlined, WomanOutlined, TeamOutlined, CalendarOutlined } from '@ant-design/icons';
 import { Pie } from '@ant-design/charts';
 import { useTheme } from '@/context/ThemeContext';
@@ -93,9 +93,19 @@ export default function DashboardPage() {
   const porcentajeHombres = totalUsuarios > 0 ? (usuariosHombres / totalUsuarios) * 100 : 0;
   const porcentajeMujeres = totalUsuarios > 0 ? (usuariosMujeres / totalUsuarios) * 100 : 0;
   const totalAlquiler = 3500000;
-  const costoUnitario = 10000;
-  const totalInvitados = totalUsuarios * costoUnitario;
-  const total_a_pagar = totalInvitados + totalAlquiler;
+  const tragosPersona = 5;
+  const tragosPorBotella = 15;
+  const cantidadTotalBotellas = Math.ceil(totalUsuarios * tragosPersona / tragosPorBotella);
+  const botellas = [
+    {nombre: 'Vodka', precio: 32500, porcentajeConsumo: 0.35},
+    {nombre: 'Gin', precio: 30875, porcentajeConsumo: 0.40},
+    {nombre: 'Fernet', precio: 37375, porcentajeConsumo: 0.25},
+  ]
+  // Calcular el costo promedio ponderado por botella basado en los porcentajes de consumo
+  const costoPorBotella = botellas.reduce((acc, botella) => acc + (botella.precio * botella.porcentajeConsumo), 0);
+  // Calcular el costo total de todas las botellas
+  const totalBotellas = costoPorBotella * cantidadTotalBotellas;
+  const total_a_pagar = totalBotellas + totalAlquiler;
   // Calcular diferencia de porcentaje
   const diferenciaPorcentaje = Math.abs(porcentajeHombres - porcentajeMujeres);
 
@@ -297,13 +307,34 @@ export default function DashboardPage() {
                 <div style={{ marginTop: '20px', textAlign: 'left', background: 'rgba(0,0,0,0.02)', padding: '20px', borderRadius: '8px' }}>                  
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' }}>
-                      <Text>Costo por persona</Text>
-                        <Text>
-                            {convertirMoneda(costoUnitario)} × {totalUsuarios} = <Text strong>{convertirMoneda(totalInvitados)}</Text>
+                      <Text>Cantidad de botellas</Text>
+                      <Text>
+                        {cantidadTotalBotellas}
                       </Text>
                     </div>
-                    
-                    <div style={{ height: '1px', background: 'rgba(0,0,0,0.06)' }} />
+
+                    <div style={{ padding: '8px 0' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text>Costo de botellas</Text>
+                        <Text>{convertirMoneda(totalBotellas)}</Text>
+                      </div>
+                      <Collapse ghost>
+                        <Collapse.Panel key="1" header={<div style={{ textAlign: 'right' }}><small>Ver detalle</small></div>} style={{ padding: 0 }}>
+                          <div style={{ padding: '10px', background: 'rgba(0,0,0,0.02)', borderRadius: '4px', marginTop: '5px' }}>
+                            {botellas.map((botella, index) => {
+                              const cantidadBotellas = Math.ceil(cantidadTotalBotellas * botella.porcentajeConsumo);
+                              const costoTotalTipo = cantidadBotellas * botella.precio;
+                              return (
+                                <div key={index} style={{ display: 'flex', justifyContent: 'space-between', margin: '5px 0' }}>
+                                  <Text>{botella.nombre} ({cantidadBotellas} unidades)</Text>
+                                  <Text>{convertirMoneda(costoTotalTipo)}</Text>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </Collapse.Panel>
+                      </Collapse>
+                    </div>
                     
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' }}>
                       <Text>Costo de alquiler</Text>

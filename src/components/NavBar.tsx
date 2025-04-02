@@ -1,8 +1,8 @@
 'use client';
 
-import { Layout, Button, Typography, Space, Avatar, Spin, Menu, Card } from 'antd';
+import { Layout, Button, Typography, Space, Spin, Menu, Card, Image } from 'antd';
 import { signOut, useSession } from 'next-auth/react';
-import { UserOutlined, LoadingOutlined, MenuOutlined, QrcodeOutlined, CloseOutlined } from '@ant-design/icons';
+import { LoadingOutlined, MenuOutlined, QrcodeOutlined, CloseOutlined } from '@ant-design/icons';
 import { useTheme } from '@/context/ThemeContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -10,14 +10,13 @@ import { isMobile } from '@/app/utils/isMobile';
 import { useState } from 'react';
 import { useRoleCheck } from '@/hooks/useRoleCheck';
 import { BreadCum } from './breadCum';
+import { Avatar } from './avatar';
+import { SwitchTheme } from './switchTheme';
+
 const { Header } = Layout;
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
-interface NavBarProps {
-  title?: string;
-}
-
-export const NavBar = ({ title = 'Home' }: NavBarProps) => {
+export const NavBar = () => {
   const { data: session, status } = useSession();
   const { themeMode } = useTheme();
   const router = useRouter();
@@ -103,15 +102,7 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
       >
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <Link href="/" style={{ textDecoration: 'none' }}>
-            <Title
-              level={3}
-              style={{
-                color: themeMode === 'dark' ? 'white' : 'black',
-                margin: 0,
-              }}
-            >
-              {title}
-            </Title>
+            <Image src="/logo.png" alt="Logo" width={50} height={50} preview={false} style={{ filter: themeMode === 'dark' ? 'invert(0)' : 'invert(1)' }} />
           </Link>
         </div>
         <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -142,7 +133,9 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
             top: 0,
             left: 0,
             right: 0,
-            backgroundColor: themeMode === 'dark' ? '#1f1f1f' : '#fff',
+            backgroundColor: themeMode === 'dark' ? 'rgba(31, 31, 31, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+            backdropFilter: 'blur(15px)',
+            WebkitBackdropFilter: 'blur(15px)', // Para compatibilidad con Safari
             transform: menuOpen ? 'translateY(0)' : 'translateY(-100%)',
             transition: 'transform 0.3s ease-in-out',
             zIndex: 999,
@@ -154,15 +147,15 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
             flexDirection: 'column',
           }}
         >
-          <div style={{ margin: '0 auto', padding: '20px', flex: '1 0 50%' }}>
+          <div style={{ margin: '0 auto', padding: '20px' }}>
             <Menu
               mode="vertical"
               style={{ 
-                fontSize: '22px', 
+                fontSize: '40px', 
                 backgroundColor: 'transparent',
                 border: 'none',
                 color: themeMode === 'dark' ? 'white' : 'black',
-                textAlign: 'center'
+                textAlign: 'center',
               }}
               items={navItems}
               onClick={() => setMenuOpen(false)}
@@ -170,11 +163,9 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
           </div>
           
           <div style={{ 
-            maxWidth: '600px', 
+            maxWidth: '50vw', 
             margin: '0 auto', 
             padding: '20px', 
-            borderTop: `1px solid ${themeMode === 'dark' ? '#333' : '#eee'}`,
-            flex: '1 0 50%',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -189,7 +180,7 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
                   gap: '12px',
                   width: '100%' 
                 }}>
-                  <Avatar size={64} icon={<UserOutlined />} src={session?.user?.image} />
+                  <Avatar nombre={session?.user?.nombre || ''} />
                   <div style={{ textAlign: 'center' }}>
                     <Text strong style={{ fontSize: '16px', color: themeMode === 'dark' ? 'white' : 'black' }}>
                       {session?.user?.nombre || session?.user?.name || session?.user?.email}
@@ -199,6 +190,7 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
                   </div>
                 </div>
               </Card>
+              <SwitchTheme />
               <Button 
                 type="primary" 
                 danger
@@ -207,6 +199,7 @@ export const NavBar = ({ title = 'Home' }: NavBarProps) => {
               >
                 Cerrar Sesión
               </Button>
+
             </Space>
           </div>
         </div>

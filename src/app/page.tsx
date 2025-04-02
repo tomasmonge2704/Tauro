@@ -1,17 +1,18 @@
 'use client';
 
-import { Card, Row, Col, Statistic } from 'antd';
 import { useSession } from 'next-auth/react';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { useRoleCheck } from '@/hooks/useRoleCheck';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { UserOutlined, TeamOutlined, CalendarOutlined, QrcodeOutlined } from '@ant-design/icons';
+import { Typography } from 'antd';
+import { isMobile } from '@/app/utils/isMobile';
+import { useTheme } from '@/context/ThemeContext';
+const { Title } = Typography;
 
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { isAdmin } = useRoleCheck();
+  const { themeMode } = useTheme();
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
@@ -28,75 +29,18 @@ export default function Home() {
   
   return (
     <ProtectedRoute>
-      <div style={{ width: '100%' }}>
-        <Row 
-          gutter={[16, 16]} 
-          style={{ marginTop: '24px' }}
-          justify={!isAdmin ? "center" : "start"}
-        >
-          <Col xs={24} sm={12} md={8}>
-            <Card 
-              hoverable
-              onClick={() => router.push(`/profile`)}
-              style={{ width: '100%' }}
-            >
-              <Statistic 
-                title="Mi Perfil" 
-                value="Ver Detalles" 
-                prefix={<UserOutlined />} 
-                valueStyle={{ color: '#1677ff' }}
-              />
-            </Card>
-          </Col>
-          {isAdmin && (
-          <Col xs={24} sm={12} md={8}>
-            <Card 
-              hoverable
-              onClick={() => router.push('/users')}
-              style={{ width: '100%' }}
-            >
-              <Statistic 
-                title="Usuarios" 
-                value="Gestionar" 
-                prefix={<TeamOutlined />} 
-                valueStyle={{ color: '#1677ff' }}
-              />
-            </Card>
-          </Col>
-          )}
-          {isAdmin && (
-          <Col xs={24} sm={12} md={8}>
-            <Card 
-              hoverable
-              onClick={() => router.push('/dashboard')}
-              style={{ width: '100%' }}
-            >
-              <Statistic 
-                title="Dashboard" 
-                value="Ver Estadísticas" 
-                prefix={<CalendarOutlined />} 
-                valueStyle={{ color: '#1677ff' }}
-              />
-            </Card>
-          </Col>
-          )}
-          {isAdmin && (
-            <Col xs={24} sm={12} md={8}>
-              <Card 
-                hoverable
-                onClick={() => router.push('/verificar-qr')}
-                style={{ width: '100%' }}
-              >
-                <Statistic 
-                  title="Escanear QR" 
-                  value="Abrir escáner" 
-                  prefix={<QrcodeOutlined />} 
-                />
-              </Card>
-            </Col>
-          )}
-        </Row>
-      </div>
+      <Title level={1} style={{ 
+        textAlign: 'center', 
+        position: 'absolute', 
+        top: '50%', 
+        left: '50%', 
+        transform: 'translate(-50%, -50%)', 
+        fontSize: isMobile() ? '85px' : '180px', 
+        color: themeMode === 'dark' ? 'white' : 'black',
+        width: '90%',
+        whiteSpace: 'nowrap',
+        overflow: 'visible'
+      }}>TAURO</Title>
     </ProtectedRoute>
   );
 }

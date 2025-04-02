@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Form, Input, Button, Card, Typography, message, Steps, Alert } from 'antd';
+import { Form, Input, Button, Card, Typography, message, Steps, Alert, Image } from 'antd';
 import { MailOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@/context/ThemeContext';
@@ -152,7 +152,7 @@ export default function LoginPage() {
       display: 'flex', 
       justifyContent: 'center', 
       alignItems: 'center', 
-      minHeight: '100vh',
+      height: '90vh',
       backgroundColor: themeMode === 'dark' ? '#141414' : '#f0f0f0'
     }}>
       <Card 
@@ -164,6 +164,8 @@ export default function LoginPage() {
         }}
       >
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
+        <Image src="/logo.png" alt="Logo" preview={false} width={120} height={120} style={{ filter: themeMode === 'dark' ? 'invert(0)' : 'invert(1)' }} />
+
           <Title level={2} style={{ color: themeMode === 'dark' ? '#fff' : undefined }}>
             Iniciar Sesión
           </Title>

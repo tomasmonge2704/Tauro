@@ -2,13 +2,13 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { Card, Avatar, Typography, Row, Col, Spin, Alert } from 'antd';
-import { UserOutlined, MailOutlined, QrcodeOutlined } from '@ant-design/icons';
+import { Card, Typography, Row, Col, Spin, Alert } from 'antd';
+import { MailOutlined, QrcodeOutlined } from '@ant-design/icons';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import UserQRCode from '@/components/UserQRCode';
 import { STATUS_PAID_COMPLETED } from '@/constants/options';
 import StatusStepper from '@/components/StatusStepper';
-
+import { Avatar } from '@/components/avatar';
 const { Title, Text } = Typography;
 
 interface ProfileData {
@@ -87,10 +87,7 @@ export default function ProfilePage() {
           <Col xs={24} md={8}>
             <Card variant='outlined' style={{ textAlign: 'center', height: '100%' }}>
               <Avatar 
-                size={120} 
-                icon={<UserOutlined />} 
-                src="/avatars/default-avatar.png" // Imagen hardcodeada
-                style={{ marginBottom: '16px' }}
+                nombre={profileData?.nombre || ''}
               />
               <Title level={3}>{profileData?.nombre} {profileData?.apellido}</Title>
               <Text type="secondary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

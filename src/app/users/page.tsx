@@ -13,6 +13,8 @@ import {
 } from '@/constants/options';
 import { isMobile } from '@/app/utils/isMobile';
 import { convertirMoneda } from '../utils/convertirMoneda';
+import NotificacionAlerta from '@/components/NotificacionAlerta';
+import useAlerta from '@/hooks/useAlerta';
 
 const { Content } = Layout;
 const { Option } = Select;
@@ -47,6 +49,8 @@ export default function UsersPage() {
   const [formFiltros] = Form.useForm();
   const [emailVaciosCount, setEmailVaciosCount] = useState<number>(0);
   const [isBrowser, setIsBrowser] = useState(false);
+  
+  const { alerta, mostrarExito, mostrarError, ocultarAlerta } = useAlerta();
   
   useEffect(() => {
     setIsBrowser(true);
@@ -238,10 +242,12 @@ export default function UsersPage() {
         )
       );
       
-      message.success('Usuario actualizado correctamente');
+      // Mostrar alerta de éxito en lugar de message
+      mostrarExito('Usuario actualizado correctamente');
     } catch (error) {
       console.error('Error:', error);
-      message.error(`No se pudo actualizar el usuario: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      // Mostrar alerta de error en lugar de message
+      mostrarError(`No se pudo actualizar el usuario: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     } finally {
       setLoading(false);
     }
@@ -275,10 +281,12 @@ export default function UsersPage() {
         fetchUsuarios(pagination.page, pagination.pageSize, filtros);
       }
       
-      message.success('Usuario eliminado correctamente');
+      // Mostrar alerta de éxito en lugar de message
+      mostrarExito('Usuario eliminado correctamente');
     } catch (error) {
       console.error('Error:', error);
-      message.error(`No se pudo eliminar el usuario: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      // Mostrar alerta de error en lugar de message
+      mostrarError(`No se pudo eliminar el usuario: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     } finally {
       setLoading(false);
     }
@@ -303,12 +311,14 @@ export default function UsersPage() {
       // Recargar la primera página después de crear un usuario
       fetchUsuarios(1, pagination.pageSize, filtros);
       
-      message.success('Usuario creado correctamente');
+      // Mostrar alerta de éxito en lugar de message
+      mostrarExito('Usuario creado correctamente');
       setModalCrearVisible(false);
       form.resetFields();
     } catch (error) {
       console.error('Error:', error);
-      message.error('No se pudo crear el usuario');
+      // Mostrar alerta de error en lugar de message
+      mostrarError(`No se pudo crear el usuario: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     } finally {
       setLoading(false);
     }
@@ -491,6 +501,15 @@ export default function UsersPage() {
 
   return (
         <Content> 
+          {/* Agregar el componente NotificacionAlerta */}
+          <NotificacionAlerta
+            mensaje={alerta.mensaje}
+            tipo={alerta.tipo}
+            visible={alerta.visible}
+            onClose={ocultarAlerta}
+            duracion={5000}
+          />
+          
           <div style={{ marginBottom: 16 }}>
             <Row gutter={[16, 16]}>
               <Col xs={24} sm={24} md={12}>
@@ -689,7 +708,7 @@ export default function UsersPage() {
               <Form.Item name="edad" label="Edad" initialValue={25}>
                 <Input type="number" />
               </Form.Item>
-              <Form.Item name="status" label="Status" initialValue="Activo" rules={[{ required: true, message: 'Por favor selecciona el status' }]}>
+              <Form.Item name="status" label="Status" initialValue={OPCIONES_STATUS[0].value} rules={[{ required: true, message: 'Por favor selecciona el status' }]}>
                 <Select placeholder="Selecciona un status">
                   {OPCIONES_STATUS.map(opcion => (
                     <Option key={opcion.value} value={opcion.value}>{opcion.label}</Option>
