@@ -63,7 +63,9 @@ const VerificadorQR = () => {
             const cameras = await Html5Qrcode.getCameras();
             
             if (cameras && cameras.length > 0) {
-              const cameraId = cameras[0].id;
+              // Intentamos seleccionar la cámara trasera
+              // En la mayoría de dispositivos la cámara trasera está en el último índice
+              const cameraId = cameras.length > 1 ? cameras[cameras.length - 1].id : cameras[0].id;
               
               await qrScannerRef.current.start(
                 cameraId, 
