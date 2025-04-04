@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Form, Input, Button, Card, Typography, message, Steps, Alert, Image } from 'antd';
 import { MailOutlined } from '@ant-design/icons';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useTheme } from '@/context/ThemeContext';
 import bcrypt from 'bcryptjs';
 import { signIn } from 'next-auth/react';
@@ -20,6 +20,7 @@ interface EmailCheckResponse {
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { themeMode } = useTheme();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -28,6 +29,16 @@ export default function LoginPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [hasPassword, setHasPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Obtener el email desde los parámetros de URL
+    const emailFromUrl = searchParams.get('email');
+    if (emailFromUrl) {
+      form.setFieldsValue({ email: emailFromUrl });
+      setEmail(emailFromUrl);
+      form.submit();
+    }
+  }, [searchParams, form]);
 
   // Paso 1: Verificar si el email existe
   const handleEmailCheck = async (values: { email: string }) => {

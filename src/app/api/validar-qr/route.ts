@@ -11,11 +11,18 @@ export async function POST(request: NextRequest) {
     
     try {      
       // Buscar el usuario para confirmar que existe y verificar su fecha de creación
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('users')
-        .select('id')
+        .select('id, qr_scanned_at')
         .eq('id', qrToken)
         .single();
+      
+      if (data?.qr_scanned_at) {
+        return NextResponse.json({ 
+          valid: false, 
+          error: 'Ya ha sido escaneado' 
+        }, { status: 400 });
+      }
       
       if (error) {
         console.error('Error al obtener usuario:', error);
@@ -26,10 +33,12 @@ export async function POST(request: NextRequest) {
       }
       
       // Actualizar el usuario para indicar que el QR ha sido escaneado
-      const { error: updateError } = await supabase
+      const { data: user, error: updateError } = await supabase
         .from('users')
         .update({ qr_scanned_at: new Date().toISOString() })
-        .eq('id', qrToken);
+        .eq('id', qrToken)
+        .select('id, nombre')
+        .single();
       
       if (updateError) {
         console.error('Error al actualizar usuario:', updateError);
@@ -41,6 +50,7 @@ export async function POST(request: NextRequest) {
       
       return NextResponse.json({ 
         valid: true,
+        user: user
       });
       
     } catch (error) {
