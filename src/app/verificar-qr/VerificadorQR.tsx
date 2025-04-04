@@ -27,7 +27,7 @@ const VerificadorQR = () => {
   const [mensajeEstado, setMensajeEstado] = useState<string>('Listo para escanear');
   const qrScannerRef = useRef<Html5Qrcode | null>(null);
   const scannerDivId = 'qr-reader';
-
+  const isMobile = window.innerWidth < 768;
   useEffect(() => {
     // Verificar permisos de cámara al cargar el componente
     const checkCameraPermission = async () => {
@@ -71,7 +71,8 @@ const VerificadorQR = () => {
                 cameraId, 
                 {
                   fps: 10,
-                  qrbox: { width: 250, height: 250 },
+                  qrbox: { width: isMobile ? 130 : 250, height: isMobile ? 130 : 250 },
+                  aspectRatio: 1.0,
                 },
                 (decodedText) => {
                   procesarResultadoQR(decodedText);
