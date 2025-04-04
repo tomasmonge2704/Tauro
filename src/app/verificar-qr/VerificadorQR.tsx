@@ -27,7 +27,7 @@ const VerificadorQR = () => {
   const [mensajeEstado, setMensajeEstado] = useState<string>('Listo para escanear');
   const qrScannerRef = useRef<Html5Qrcode | null>(null);
   const scannerDivId = 'qr-reader';
-  const isMobile = window.innerWidth < 768;
+
   useEffect(() => {
     // Verificar permisos de cámara al cargar el componente
     const checkCameraPermission = async () => {
@@ -58,7 +58,8 @@ const VerificadorQR = () => {
       const startScanner = async () => {
         try {
           // Aseguramos que el div existe antes de inicializar el escáner
-          if (document.getElementById(scannerDivId)) {
+          const scannerElement = document.getElementById(scannerDivId);
+          if (scannerElement) {
             qrScannerRef.current = new Html5Qrcode(scannerDivId);
             const cameras = await Html5Qrcode.getCameras();
             
@@ -67,11 +68,19 @@ const VerificadorQR = () => {
               // En la mayoría de dispositivos la cámara trasera está en el último índice
               const cameraId = cameras.length > 1 ? cameras[cameras.length - 1].id : cameras[0].id;
               
+              // Calcular un tamaño relativo para el qrbox basado en el contenedor
+              const width = scannerElement.offsetWidth;
+              const height = scannerElement.offsetHeight;
+              const qrboxSize = Math.min(width, height) * 0.7; // 70% del lado más pequeño
+              
               await qrScannerRef.current.start(
                 cameraId, 
                 {
                   fps: 10,
-                  qrbox: { width: isMobile ? 130 : 250, height: isMobile ? 130 : 250 },
+                  qrbox: {
+                    width: qrboxSize,
+                    height: qrboxSize
+                  },
                   aspectRatio: 1.0,
                 },
                 (decodedText) => {
@@ -251,7 +260,27 @@ const VerificadorQR = () => {
             }}
           >
             {escaneando ? (
-              <div id={scannerDivId} style={{ width: '100%', height: '100%' }} />
+              <div id={scannerDivId} style={{ 
+                width: '100%', 
+                height: '300px',
+                position: 'relative'
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  border: '2px dashed #fff',
+                  boxShadow: '0 0 0 100vmax rgba(0, 0, 0, 0.5)',
+                  zIndex: 102,
+                  pointerEvents: 'none',
+                  width: '70%',
+                  height: '70%',
+                  maxWidth: '250px',
+                  maxHeight: '250px',
+                  borderRadius: '10px'
+                }}></div>
+              </div>
             ) : (
               <Text type="secondary" style={{ textAlign: 'center', padding: '30px' }}>
                 <QrcodeOutlined style={{ fontSize: '32px', marginBottom: '8px', display: 'block' }} />
