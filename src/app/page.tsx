@@ -5,7 +5,6 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { useTheme } from '@/context/ThemeContext';
 import { Button } from 'antd';
 import { isMobile } from 'react-device-detect';
 import Image from 'next/image';
@@ -13,7 +12,6 @@ import Image from 'next/image';
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { themeMode } = useTheme();
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');

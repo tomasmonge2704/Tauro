@@ -3,7 +3,6 @@
 import { Layout, Button, Typography, Space, Spin, Menu, Card, Image } from 'antd';
 import { signOut, useSession } from 'next-auth/react';
 import { LoadingOutlined, MenuOutlined, QrcodeOutlined, CloseOutlined } from '@ant-design/icons';
-import { useTheme } from '@/context/ThemeContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { isMobile } from 'react-device-detect';
@@ -16,7 +15,6 @@ const { Text } = Typography;
 
 export const NavBar = () => {
   const { data: session, status } = useSession();
-  const { themeMode } = useTheme();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const { isAdmin } = useRoleCheck();
