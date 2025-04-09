@@ -1,6 +1,6 @@
 'use client';
 
-import { Typography, Layout, Row, Tag, Button } from 'antd';
+import { Typography, Layout, Button } from 'antd';
 import { EnvironmentOutlined } from '@ant-design/icons';
 
 const { Text, Title } = Typography;
@@ -13,16 +13,14 @@ export default function InfoPage() {
       <Title level={1} style={{ fontSize: '50px', color: '#5eac50', marginBottom: '5px' }} >
         TAURO
       </Title>
-      <Row style={{ gap: '5px' }}>
         <Button 
-          style={{ height: '22px'}} 
+          style={{ height: '22px', width: '100%'}} 
           type='dashed' 
           icon={<EnvironmentOutlined />}
           onClick={() => window.open('https://maps.app.goo.gl/9aT1Jfj9eGgJ9hwV9', '_blank')}
         >
           Ubicación
-        </Button> <Tag>+ 18</Tag>
-      </Row>
+        </Button>
       </div>
       
       <Title level={1} style={{ marginTop: '50px' }} >
