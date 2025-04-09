@@ -1,4 +1,4 @@
-import { isMobile } from '@/app/utils/isMobile';
+import { isMobile } from 'react-device-detect';
 import { Breadcrumb } from 'antd';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -45,7 +45,7 @@ export const BreadCum = () => {
     return items;
   };
   return (
-    !isLoginPage && !isMobile() && pathname !== '/' ? (
+    !isLoginPage && !isMobile && pathname !== '/' ? (
         <Breadcrumb 
           items={generateBreadcrumbItems()}
         />

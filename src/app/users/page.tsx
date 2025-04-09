@@ -1,6 +1,6 @@
 'use client';
 
-import { Layout, Table, Modal, Form, Input, Button, message, Space, Select, Pagination, Input as AntInput, Row, Col, Card, Slider, Tag, Popconfirm, Badge, Tooltip } from 'antd';
+import { Table, Modal, Form, Input, Button, message, Space, Select, Pagination, Input as AntInput, Row, Col, Card, Slider, Tag, Popconfirm, Badge, Tooltip } from 'antd';
 import { useState, useEffect } from 'react';
 import { EditOutlined, DeleteOutlined, UserAddOutlined, SearchOutlined, FilterOutlined, ClearOutlined, WarningOutlined } from '@ant-design/icons';
 import type { Usuario } from '@/types/usuario';
@@ -11,12 +11,11 @@ import {
   OPCIONES_STATUS, 
   getGrupoColor,
 } from '@/constants/options';
-import { isMobile } from '@/app/utils/isMobile';
+import { isMobile } from 'react-device-detect';
 import { convertirMoneda } from '../utils/convertirMoneda';
 import NotificacionAlerta from '@/components/NotificacionAlerta';
 import useAlerta from '@/hooks/useAlerta';
 
-const { Content } = Layout;
 const { Option } = Select;
 const { Search } = AntInput;
 
@@ -500,7 +499,7 @@ export default function UsersPage() {
   };
 
   return (
-        <Content> 
+        <Card> 
           {/* Agregar el componente NotificacionAlerta */}
           <NotificacionAlerta
             mensaje={alerta.mensaje}
@@ -522,7 +521,7 @@ export default function UsersPage() {
                   style={{ width: '100%' }}
                 />
               </Col>
-              <Col xs={24} sm={24} md={12} style={{ display: 'flex', justifyContent: isBrowser && isMobile() ? 'center' : 'flex-end' }}>
+                <Col xs={24} sm={24} md={12} style={{ display: 'flex', justifyContent: isBrowser && isMobile ? 'center' : 'flex-end' }}>
                 <Space>
                   <Button 
                     onClick={toggleFiltros}
@@ -624,9 +623,9 @@ export default function UsersPage() {
               onChange={handlePageChange}
               showSizeChanger
               pageSizeOptions={['5', '10', '20', '50']}
-              showTotal={!isBrowser || !isMobile() ? (total, range) => `${range[0]}-${range[1]} de ${total} usuarios` : undefined}
+              showTotal={!isBrowser || !isMobile ? (total, range) => `${range[0]}-${range[1]} de ${total} usuarios` : undefined}
               responsive={true}
-              size={isBrowser && isMobile() ? "small" : "default"}
+              size={isBrowser && isMobile ? "small" : "default"}
             />
           </div>
           
@@ -735,6 +734,6 @@ export default function UsersPage() {
               </Form.Item>
             </Form>
           </Modal>
-        </Content>
+        </Card>
   );
 }

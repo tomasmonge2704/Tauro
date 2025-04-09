@@ -124,7 +124,9 @@ export default function ProfilePage() {
         </Row>
         <Row gutter={[24, 24]} style={{ marginTop: '24px' }}>
             <Col span={24}>
-                <StatusStepper currentStatus={profileData?.status || ''} />
+                <Card title="Estado del pago" variant='outlined'>
+                    <StatusStepper currentStatus={profileData?.status || ''} />
+                </Card>
             </Col>
         </Row>
       </div>

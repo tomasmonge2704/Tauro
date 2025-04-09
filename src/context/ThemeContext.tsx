@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { ConfigProvider, theme } from 'antd';
 import { antThemeTokens, componentOverrides } from '@/styles/theme';
 
-type ThemeMode = 'light' | 'dark';
+type ThemeMode = 'dark' | 'light';
 
 interface ThemeContextType {
   themeMode: ThemeMode;
@@ -14,7 +14,7 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [themeMode, setThemeMode] = useState<ThemeMode>('light');
+  const [themeMode, setThemeMode] = useState<ThemeMode>('dark');
 
   useEffect(() => {
     // Recuperar tema del localStorage al inicio

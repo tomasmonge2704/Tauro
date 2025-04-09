@@ -6,12 +6,10 @@ import { LoadingOutlined, MenuOutlined, QrcodeOutlined, CloseOutlined } from '@a
 import { useTheme } from '@/context/ThemeContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { isMobile } from '@/app/utils/isMobile';
+import { isMobile } from 'react-device-detect';
 import { useState } from 'react';
 import { useRoleCheck } from '@/hooks/useRoleCheck';
-import { BreadCum } from './breadCum';
 import { Avatar } from './avatar';
-import { SwitchTheme } from './switchTheme';
 
 const { Header } = Layout;
 const { Text } = Typography;
@@ -48,6 +46,14 @@ export const NavBar = () => {
       ),
     },
     {
+      key: 'info',
+      label: (
+        <Link href="/info" style={{ color: 'inherit' }}>
+          Información
+        </Link>
+      ),
+    },
+    {
       adminOnly: true,
       key: 'users',
       label: (
@@ -70,13 +76,12 @@ export const NavBar = () => {
       key: 'verificar-qr',
       label: (
         <Link href="/verificar-qr" style={{ color: 'inherit' }}>
-          Verificador QR
+          Verificador
         </Link>
       ),
-      icon: <QrcodeOutlined />
+      icon: <QrcodeOutlined style={{ fontSize: '32px' }} />
     },
   ].filter(item => isAdmin || !item.adminOnly);
-
   return (
     <>
       <Header
@@ -85,28 +90,27 @@ export const NavBar = () => {
           justifyContent: 'space-between',
           alignItems: 'center',
           padding: '0 24px',
-          backgroundColor: themeMode === 'dark' ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+          backgroundColor: themeMode === 'dark' ? 'rgba(0, 0, 0, 0.25)' : 'rgba(255, 255, 255, 0.8)',
           color: themeMode === 'dark' ? 'white' : 'black',
           position: 'fixed',
           top: '20px',
-          left: isMobile() ? '20px' : '50%',
-          right: isMobile() ? '20px' : '50%',
-          transform: isMobile() ? 'none' : 'translateX(-50%)',
+          left: isMobile ? '24px' : '50%',
+          right: isMobile ? '24px' : '50%',
+          transform: isMobile ? 'none' : 'translateX(-50%)',
           zIndex: 1000,
           borderRadius: '12px',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
-          backdropFilter: 'blur(8px)',
+          boxShadow: '0 8px 32px 0 #64a85517',
+          backdropFilter: 'blur(4px)',
+          WebkitBackdropFilter: 'blur(4px)',
+          border: '1px solid rgba( 255, 255, 255, 0.18 )',
           margin: '0 auto',
-          width: !isMobile() ? '40%' : '',
+          width: !isMobile ? '30%' : '',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <Link href="/" style={{ textDecoration: 'none' }}>
-            <Image src="/logo.png" alt="Logo" width={50} height={50} preview={false} style={{ filter: themeMode === 'dark' ? 'invert(0)' : 'invert(1)' }} />
+            <Image src="/logo-solo-verde.png" alt="Logo" width={50} height={50} preview={false} style={{ objectFit: 'contain' }} />
           </Link>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <BreadCum />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {isAuthenticated && (
@@ -147,7 +151,7 @@ export const NavBar = () => {
             flexDirection: 'column',
           }}
         >
-          <div style={{ margin: '0 auto', padding: '20px' }}>
+          <div style={{ margin: '0 auto', padding: '20px', marginTop: '80px' }}>
             <Menu
               mode="vertical"
               style={{ 
@@ -163,7 +167,7 @@ export const NavBar = () => {
           </div>
           
           <div style={{ 
-            maxWidth: '50vw', 
+            maxWidth: isMobile ? '100vw' : '50vw', 
             margin: '0 auto', 
             padding: '20px', 
             display: 'flex',
@@ -190,7 +194,6 @@ export const NavBar = () => {
                   </div>
                 </div>
               </Card>
-              <SwitchTheme />
               <Button 
                 type="primary" 
                 danger

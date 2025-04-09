@@ -5,7 +5,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { NavBarWrapper } from "@/components/NavBarWrapper";
 export const metadata: Metadata = {
   title: "TAURO",
-  description: "La mejor fiesta del año.",
+  description: "???",
 };
 
 export default function RootLayout({

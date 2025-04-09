@@ -8,7 +8,7 @@ import { useTheme } from '@/context/ThemeContext';
 import bcrypt from 'bcryptjs';
 import { signIn } from 'next-auth/react';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const { Step } = Steps;
 
 interface EmailCheckResponse {
@@ -178,7 +178,6 @@ export default function LoginPage() {
       justifyContent: 'center', 
       alignItems: 'center', 
       height: '90vh',
-      backgroundColor: themeMode === 'dark' ? '#141414' : '#f0f0f0'
     }}>
       <Card 
         style={{ 
@@ -189,11 +188,7 @@ export default function LoginPage() {
         }}
       >
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-        <Image src="/logo.png" alt="Logo" preview={false} width={120} height={120} style={{ filter: themeMode === 'dark' ? 'invert(0)' : 'invert(1)' }} />
-
-          <Title level={2} style={{ color: themeMode === 'dark' ? '#fff' : undefined }}>
-            Iniciar Sesión
-          </Title>
+        <Image src="/logo-solo-verde.png" alt="Logo" preview={false} width='auto' height={250} style={{ objectFit: 'cover' }} />
           {currentStep > 0 && (
             <Steps current={currentStep} size="small" style={{ marginBottom: 24 }}>
               <Step title="Email" />

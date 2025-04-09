@@ -20,7 +20,8 @@ export function NavBarWrapper({ children }: NavBarWrapperProps) {
   return (
     <Layout style={{ 
       minHeight: '100vh', 
-      backgroundColor: themeMode === 'dark' ? '#141414' : '#f0f0f0',
+      background: themeMode === 'dark' ? '#00000066' : '#f0f0f0',
+      backdropFilter: 'blur(35px)'
     }}>
       {!isLoginPage && <NavBar />}
       <Content style={{ 

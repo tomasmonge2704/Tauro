@@ -4,11 +4,11 @@ import { useSession } from 'next-auth/react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { Typography, Button } from 'antd';
 import Link from 'next/link';
-import { isMobile } from '@/app/utils/isMobile';
 import { useTheme } from '@/context/ThemeContext';
-const { Title } = Typography;
+import { Button } from 'antd';
+import { isMobile } from 'react-device-detect';
+import Image from 'next/image';
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -30,20 +30,21 @@ export default function Home() {
   
   return (
     <ProtectedRoute>
-      <Title level={1} style={{ 
-        textAlign: 'center', 
-        position: 'absolute', 
-        top: '50%', 
-        left: '50%', 
-        transform: 'translate(-50%, -50%)', 
-        fontSize: isMobile() ? '85px' : '180px', 
-        color: themeMode === 'dark' ? 'white' : 'black',
-        width: '90%',
-        whiteSpace: 'nowrap',
-        overflow: 'visible'
-      }}>TAURO</Title>
+        <Image 
+          src={themeMode === 'dark' ? "/logo-verde.png" : "/logo-solo-verde.png"} 
+          alt="Logo" 
+          width={isMobile ? 300 : 500}
+          height={isMobile ? 300 : 500} 
+          style={{ 
+            position: 'absolute', 
+            objectFit: 'contain',
+            top: '50%', 
+            left: '50%', 
+            transform: 'translate(-50%, -50%)'
+          }} 
+        />
       <div style={{
-        display: isMobile() ? 'grid' : 'flex',
+        display: isMobile ? 'grid' : 'flex',
         justifyContent: 'center',
         left: '50%',
         transform: 'translate(-50%, 0)',
@@ -54,11 +55,8 @@ export default function Home() {
         <Link href='/profile'>
           <Button type='dashed' style={{ height: '40px', width: '100%' }}>Ver Perfil</Button>
         </Link>
-        <Link href='/'>
+        <Link href='/info'>
           <Button type='dashed' style={{ height: '40px', width: '100%' }}>Información del Evento</Button>
-        </Link>
-        <Link href='/'>
-          <Button type='dashed' style={{ height: '40px', width: '100%' }}>Contacto</Button>
         </Link>
       </div>
     </ProtectedRoute>
