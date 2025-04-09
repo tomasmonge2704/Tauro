@@ -6,5 +6,6 @@ export const allowedRoutes = [
   '/',
   '/api/profile',
   '/api/profile/qr',
-  '/profile'
+  '/profile',
+  '/info'
 ];
