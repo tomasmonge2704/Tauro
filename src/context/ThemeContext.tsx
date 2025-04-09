@@ -4,44 +4,34 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { ConfigProvider, theme } from 'antd';
 import { antThemeTokens, componentOverrides } from '@/styles/theme';
 
-type ThemeMode = 'dark' | 'light';
+// Ahora solo usamos el modo oscuro
+type ThemeMode = 'dark';
 
 interface ThemeContextType {
   themeMode: ThemeMode;
-  toggleTheme: () => void;
+  // Eliminamos la función de cambio de tema
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [themeMode, setThemeMode] = useState<ThemeMode>('dark');
+  // Siempre será 'dark'
+  const [themeMode] = useState<ThemeMode>('dark');
 
   useEffect(() => {
-    // Recuperar tema del localStorage al inicio
-    const savedTheme = localStorage.getItem('theme') as ThemeMode;
-    if (savedTheme) {
-      setThemeMode(savedTheme);
-    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      // Usar preferencia del sistema si no hay tema guardado
-      setThemeMode('dark');
-    }
+    // Siempre establecemos el tema oscuro
+    localStorage.setItem('theme', 'dark');
   }, []);
 
-  const toggleTheme = () => {
-    const newTheme = themeMode === 'light' ? 'dark' : 'light';
-    setThemeMode(newTheme);
-    localStorage.setItem('theme', newTheme);
-  };
-
-  // Configuración del tema de Ant Design
+  // Configuración del tema de Ant Design siempre en modo oscuro
   const themeConfig = {
-    algorithm: themeMode === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm,
-    token: antThemeTokens[themeMode],
+    algorithm: theme.darkAlgorithm,
+    token: antThemeTokens['dark'],
     components: componentOverrides,
   };
 
   return (
-    <ThemeContext.Provider value={{ themeMode, toggleTheme }}>
+    <ThemeContext.Provider value={{ themeMode }}>
       <ConfigProvider theme={themeConfig}>
         {children}
       </ConfigProvider>

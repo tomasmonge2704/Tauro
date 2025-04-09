@@ -90,8 +90,8 @@ export const NavBar = () => {
           justifyContent: 'space-between',
           alignItems: 'center',
           padding: '0 24px',
-          backgroundColor: themeMode === 'dark' ? 'rgba(0, 0, 0, 0.25)' : 'rgba(255, 255, 255, 0.8)',
-          color: themeMode === 'dark' ? 'white' : 'black',
+          backgroundColor: 'rgba(0, 0, 0, 0.25)',
+          color: 'white',
           position: 'fixed',
           top: '20px',
           left: isMobile ? '24px' : '50%',
@@ -117,15 +117,15 @@ export const NavBar = () => {
             <Button
               type="text"
               icon={menuOpen 
-                ? <CloseOutlined style={{ fontSize: '20px', color: themeMode === 'dark' ? 'white' : 'black' }} />
-                : <MenuOutlined style={{ fontSize: '20px', color: themeMode === 'dark' ? 'white' : 'black' }} />
+                ? <CloseOutlined style={{ fontSize: '20px', color: 'white' }} />
+                : <MenuOutlined style={{ fontSize: '20px', color: 'white' }} />
               }
               onClick={() => setMenuOpen(!menuOpen)}
             />
           )}
           
           {isLoading ? (
-            <Spin indicator={<LoadingOutlined style={{ fontSize: 24, color: themeMode === 'dark' ? 'white' : 'black' }} spin />} />
+            <Spin indicator={<LoadingOutlined style={{ fontSize: 24, color: 'white' }} spin />} />
           ) : null}
         </div>
       </Header>
@@ -137,7 +137,7 @@ export const NavBar = () => {
             top: 0,
             left: 0,
             right: 0,
-            backgroundColor: themeMode === 'dark' ? 'rgba(31, 31, 31, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+            backgroundColor: 'rgba(31, 31, 31, 0.8)',
             backdropFilter: 'blur(15px)',
             WebkitBackdropFilter: 'blur(15px)', // Para compatibilidad con Safari
             transform: menuOpen ? 'translateY(0)' : 'translateY(-100%)',
@@ -158,7 +158,7 @@ export const NavBar = () => {
                 fontSize: '40px', 
                 backgroundColor: 'transparent',
                 border: 'none',
-                color: themeMode === 'dark' ? 'white' : 'black',
+                color: 'white',
                 textAlign: 'center',
               }}
               items={navItems}
@@ -186,7 +186,7 @@ export const NavBar = () => {
                 }}>
                   <Avatar nombre={session?.user?.nombre || ''} />
                   <div style={{ textAlign: 'center' }}>
-                    <Text strong style={{ fontSize: '16px', color: themeMode === 'dark' ? 'white' : 'black' }}>
+                    <Text strong style={{ fontSize: '16px', color: 'white' }}>
                       {session?.user?.nombre || session?.user?.name || session?.user?.email}
                     </Text>
                     <br />
@@ -202,7 +202,6 @@ export const NavBar = () => {
               >
                 Cerrar Sesión
               </Button>
-
             </Space>
           </div>
         </div>

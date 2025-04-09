@@ -31,7 +31,7 @@ export default function Home() {
   return (
     <ProtectedRoute>
         <Image 
-          src={themeMode === 'dark' ? "/logo-verde.png" : "/logo-solo-verde.png"} 
+          src="/logo-verde.png" 
           alt="Logo" 
           width={isMobile ? 300 : 500}
           height={isMobile ? 300 : 500} 
