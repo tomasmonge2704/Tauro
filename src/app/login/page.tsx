@@ -15,7 +15,7 @@ interface EmailCheckResponse {
   exists: boolean;
   hasPassword: boolean;
   userId?: string;
-  isAdmin?: boolean;
+  requeredPassword?: boolean;
 }
 
 export default function LoginPage() {
@@ -63,7 +63,7 @@ export default function LoginPage() {
         }
 
         // Si no es administrador, iniciar sesión directamente
-        if (data.isAdmin === false) {
+        if (data.requeredPassword === false) {
           await signIn('credentials', {
             redirect: true,
             callbackUrl: '/',

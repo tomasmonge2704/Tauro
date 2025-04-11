@@ -212,10 +212,10 @@ export default function UsersPage() {
     try {
       setLoading(true);
       // Convertir el rol a número antes de enviarlo
+      const edad = values.edad ? Number(values.edad) : 0;
       const updatedValues = {
         ...values,
-        rol: values.rol ? Number(values.rol) : 0, 
-        edad: values.edad ? Number(values.edad) : 0,
+        edad: edad,
       };
       const response = await fetch(`/api/usuarios/${usuarioEditando.id}`, {
         method: 'PUT',

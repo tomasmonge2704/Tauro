@@ -62,10 +62,10 @@ export default function UserDetailPage() {
       setLoading(true);
       
       // Convertir el rol y edad a número antes de enviar
+      const edad = values.edad ? Number(values.edad) : 0;
       const updatedValues = {
         ...values,
-        rol: values.rol ? Number(values.rol) : 0,
-        edad: values.edad ? Number(values.edad) : 0,
+        edad: edad,
       };
       
       const response = await fetch(`/api/usuarios/${userId}`, {
@@ -240,7 +240,7 @@ export default function UserDetailPage() {
                       <Tag color={getGrupoColor(usuario.grupo)}>{usuario.grupo}</Tag>
                     ) : "—"}
                   </Descriptions.Item>
-                  <Descriptions.Item label="Rol">{usuario?.rol}</Descriptions.Item>
+                  <Descriptions.Item label="Rol">{usuario?.role}</Descriptions.Item>
                   <Descriptions.Item label="Creado">
                     {usuario?.created_at ? new Date(usuario.created_at).toLocaleString() : "—"}
                   </Descriptions.Item>

@@ -13,9 +13,8 @@ export async function middleware(req: NextRequest) {
   const isSecureRoute = allowedRoutes.includes(req.nextUrl.pathname);
   // Verificar acceso a rutas de API para administradores
   if (isApiRoute && !isAuthApiRoute && user && !isSecureRoute) {
-    // Verificar si el usuario es administrador (role === 1)
-    const userRole = user.rol as number;
-    if (userRole !== 0) {
+    const isAdmin = user.isAdmin;
+    if (!isAdmin) {
       // Si no es administrador, devolver respuesta 403 Forbidden
       return new NextResponse(
         JSON.stringify({ error: 'Acceso denegado. Solo administradores pueden acceder a esta API' }),

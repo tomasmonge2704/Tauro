@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { supabase } from '@/lib/supabase';
 import bcrypt from 'bcryptjs';
 import type { NextAuthOptions } from "next-auth";
+import { getRole } from '@/app/utils/getUserData';
 
 const AuthOptions: NextAuthOptions = {
   providers: [
@@ -29,8 +30,10 @@ const AuthOptions: NextAuthOptions = {
             console.error("Usuario no encontrado:", error);
             return user;
           }
-          
-          const isAdmin = user?.rol === 0;
+
+          const role = await getRole(user.role);
+          const isAdmin = role?.name === 'Admin';
+
           if (user && !isAdmin) {
             delete user.password;
             return user;
@@ -54,7 +57,7 @@ const AuthOptions: NextAuthOptions = {
           delete user.password;
           
           // Devolver el usuario completo
-          return user;
+          return { ...user, isAdmin, roleComplete: role };
         } catch (error) {
           console.error("Error en authorize:", error);
           return null;

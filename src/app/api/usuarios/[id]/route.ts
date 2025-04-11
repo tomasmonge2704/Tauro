@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { getUserData } from '@/app/utils/getUserData';
+import { STATUS_PAID_COMPLETED } from '@/constants/options';
 
 type tParams = Promise<{
   id: string;
@@ -43,6 +44,10 @@ export async function PUT(
     // Obtener los datos del usuario que está haciendo la petición
     const user = await getUserData(request);
     const updated_by = user?.nombre;
+
+    if (datosActualizados.status === STATUS_PAID_COMPLETED && !datosActualizados.paid_at) {
+      datosActualizados.paid_at = new Date().toISOString();
+    }
     
     // Actualizar el usuario incluyendo quien hizo la actualización
     const { data, error } = await supabase

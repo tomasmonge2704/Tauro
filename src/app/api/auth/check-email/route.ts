@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { getRole } from '@/app/utils/getUserData';
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
     // Buscar el usuario por email
     const { data, error } = await supabase
       .from('users')
-      .select('id, password, rol')
+      .select('id, password, role')
       .eq('email', email)
       .single();
     
@@ -25,12 +26,13 @@ export async function GET(request: NextRequest) {
     // Determinar si el usuario existe y si tiene contraseña
     const exists = !!data;
     const hasPassword = exists && !!data.password;
+    const roleData = await getRole(data?.role);
     
     return NextResponse.json({
       exists,
       hasPassword,
       userId: exists ? data.id : undefined,
-      isAdmin: data?.rol === 0
+      requeredPassword: roleData?.requeredPassword,
     });
   } catch (error) {
     console.error('Error inesperado:', error);

@@ -26,6 +26,14 @@ interface FinanceData {
   totalPagos: number;
 }
 
+interface Botella {
+  nombre: string;
+  precio: number;
+  porcentajeConsumo: number;
+  cantidad: number;
+  precioTotal: number;
+}
+
 export default function DashboardPage() {
   const [estadisticas, setEstadisticas] = useState<EstadisticasData | null>(null);
   const [financeData, setFinanceData] = useState<FinanceData | null>(null);
@@ -34,6 +42,15 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [financeError, setFinanceError] = useState<string | null>(null);
   const { themeMode } = useTheme();
+  const botellasInicial = [
+    {nombre: 'Vodka', precio: 32500, porcentajeConsumo: 0.35, cantidad: 0, precioTotal: 0},
+    {nombre: 'Gin', precio: 30875, porcentajeConsumo: 0.40, cantidad: 0, precioTotal: 0},
+    {nombre: 'Fernet', precio: 37375, porcentajeConsumo: 0.25, cantidad: 0, precioTotal: 0},
+  ];
+  const [botellas, setBotellas] = useState<Botella[]>(botellasInicial);
+  const [totalBotellas, setTotalBotellas] = useState(0);
+  const [cantidadTotalBotellas, setCantidadTotalBotellas] = useState(0);
+  const [total_a_pagar, setTotalAPagar] = useState(0);
 
   useEffect(() => {
     const fetchEstadisticas = async () => {
@@ -95,17 +112,28 @@ export default function DashboardPage() {
   const totalAlquiler = 3500000;
   const tragosPersona = 5;
   const tragosPorBotella = 15;
-  const cantidadTotalBotellas = Math.ceil(totalUsuarios * tragosPersona / tragosPorBotella);
-  const botellas = [
-    {nombre: 'Vodka', precio: 32500, porcentajeConsumo: 0.35},
-    {nombre: 'Gin', precio: 30875, porcentajeConsumo: 0.40},
-    {nombre: 'Fernet', precio: 37375, porcentajeConsumo: 0.25},
-  ]
-  // Calcular el costo promedio ponderado por botella basado en los porcentajes de consumo
-  const costoPorBotella = botellas.reduce((acc, botella) => acc + (botella.precio * botella.porcentajeConsumo), 0);
-  // Calcular el costo total de todas las botellas
-  const totalBotellas = costoPorBotella * cantidadTotalBotellas;
-  const total_a_pagar = totalBotellas + totalAlquiler;
+
+  // Efecto para calcular las botellas cuando cambien las estadísticas
+  useEffect(() => {
+    const calculatedCantidadTotalBotellas = Math.ceil(totalUsuarios * tragosPersona / tragosPorBotella);
+    setCantidadTotalBotellas(calculatedCantidadTotalBotellas);
+    
+    let calculatedTotalBotellas = 0;
+    const nuevasBotellas = botellasInicial.map(botella => {
+      const cantidadBotellasTipo = Number((calculatedCantidadTotalBotellas * botella.porcentajeConsumo).toFixed(2));
+      calculatedTotalBotellas += cantidadBotellasTipo * botella.precio;
+      return {
+        ...botella,
+        cantidad: cantidadBotellasTipo,
+        precioTotal: cantidadBotellasTipo * botella.precio
+      };
+    });
+    
+    setBotellas(nuevasBotellas);
+    setTotalBotellas(calculatedTotalBotellas);
+    setTotalAPagar(calculatedTotalBotellas + totalAlquiler);
+  }, [totalUsuarios, tragosPersona, tragosPorBotella, totalAlquiler]);
+
   // Calcular diferencia de porcentaje
   const diferenciaPorcentaje = Math.abs(porcentajeHombres - porcentajeMujeres);
 
@@ -322,12 +350,10 @@ export default function DashboardPage() {
                         <Collapse.Panel key="1" header={<div style={{ textAlign: 'right' }}><small>Ver detalle</small></div>} style={{ padding: 0 }}>
                           <div style={{ padding: '10px', background: 'rgba(0,0,0,0.02)', borderRadius: '4px', marginTop: '5px' }}>
                             {botellas.map((botella, index) => {
-                              const cantidadBotellas = Math.ceil(cantidadTotalBotellas * botella.porcentajeConsumo);
-                              const costoTotalTipo = cantidadBotellas * botella.precio;
                               return (
                                 <div key={index} style={{ display: 'flex', justifyContent: 'space-between', margin: '5px 0' }}>
-                                  <Text>{botella.nombre} ({cantidadBotellas} unidades)</Text>
-                                  <Text>{convertirMoneda(costoTotalTipo)}</Text>
+                                  <Text>{botella.nombre} ({botella.cantidad} unidades)</Text>
+                                  <Text>{convertirMoneda(botella.precioTotal)}</Text>
                                 </div>
                               );
                             })}
