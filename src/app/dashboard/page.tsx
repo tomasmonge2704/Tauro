@@ -276,7 +276,7 @@ export default function DashboardPage() {
       <>
         <Row gutter={[16, 16]} style={{ width: '100%' }}>
           <Col xs={12} sm={6}>
-            <Card>
+            <Card style={{ height: '100%' }}>
               <Statistic
                 title="Total Usuarios"
                 value={totalUsuarios}
@@ -292,7 +292,7 @@ export default function DashboardPage() {
               />
             </Card>
           </Col>
-          <Col xs={12} sm={6}>
+          <Col xs={24} sm={6}>
             <Card>
               <Statistic
                 title="Total Recaudado"
@@ -300,7 +300,7 @@ export default function DashboardPage() {
               />
             </Card>
           </Col>
-          <Col xs={12} sm={6}>
+          <Col xs={24} sm={6}>
             <Card>
               <Statistic
                 title="Total a Recaudar"
