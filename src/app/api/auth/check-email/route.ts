@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       exists,
       hasPassword,
       userId: exists ? data.id : undefined,
-      requeredPassword: roleData?.requeredPassword,
+      requeredPassword: roleData?.requeredPassword || false,
     });
   } catch (error) {
     console.error('Error inesperado:', error);
