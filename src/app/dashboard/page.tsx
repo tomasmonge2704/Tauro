@@ -115,12 +115,12 @@ export default function DashboardPage() {
 
   // Efecto para calcular las botellas cuando cambien las estadísticas
   useEffect(() => {
-    const calculatedCantidadTotalBotellas = Math.ceil(totalUsuarios * tragosPersona / tragosPorBotella);
-    setCantidadTotalBotellas(calculatedCantidadTotalBotellas);
-    
+    const preTotalBotellas = Math.ceil(totalUsuarios * tragosPersona / tragosPorBotella);
+    let totalBotellas = 0;
     let calculatedTotalBotellas = 0;
     const nuevasBotellas = botellasInicial.map(botella => {
-      const cantidadBotellasTipo = Number((calculatedCantidadTotalBotellas * botella.porcentajeConsumo).toFixed(2));
+      const cantidadBotellasTipo = Math.ceil(preTotalBotellas * botella.porcentajeConsumo);
+      totalBotellas += cantidadBotellasTipo;
       calculatedTotalBotellas += cantidadBotellasTipo * botella.precio;
       return {
         ...botella,
@@ -128,7 +128,7 @@ export default function DashboardPage() {
         precioTotal: cantidadBotellasTipo * botella.precio
       };
     });
-    
+    setCantidadTotalBotellas(totalBotellas);
     setBotellas(nuevasBotellas);
     setTotalBotellas(calculatedTotalBotellas);
     setTotalAPagar(calculatedTotalBotellas + totalAlquiler);
