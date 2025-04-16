@@ -6,6 +6,8 @@ import { ManOutlined, WomanOutlined, TeamOutlined, CalendarOutlined } from '@ant
 import { Pie } from '@ant-design/charts';
 import { useTheme } from '@/context/ThemeContext';
 import { convertirMoneda } from '../utils/convertirMoneda';
+import GrupoBarChart from '@/components/GrupoBarChart';
+import CrecimientoUsuariosChart from '@/components/CrecimientoUsuariosChart';
 
 const { Content } = Layout;
 const { Text } = Typography;
@@ -16,6 +18,7 @@ interface EstadisticasData {
   generoStats: { Hombre: number; Mujer: number };
   statusStats: { status: string; count: number }[];
   grupoStats: { grupo: string; count: number }[];
+  creationDates: { id: number | string; created_at: string }[];
   edadPromedio: number;
 }
 
@@ -229,9 +232,9 @@ export default function DashboardPage() {
           </Col>
         </Row>
         
-        {/* Gráficos */}
+        {/* Gráficos de distribución */}
         <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
-          <Col xs={24}>
+          <Col xs={24} md={12}>
             <Card title="Distribución por Género">
               {datosGenero.length > 0 ? (
                 <Pie {...configGenero} />
@@ -241,6 +244,19 @@ export default function DashboardPage() {
                 </div>
               )}
             </Card>
+          </Col>
+          <Col xs={24} md={12}>
+            <GrupoBarChart data={estadisticas?.grupoStats || []} loading={loading} />
+          </Col>
+        </Row>
+
+        {/* Gráfico de crecimiento */}
+        <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
+          <Col xs={24}>
+            <CrecimientoUsuariosChart 
+              data={estadisticas?.creationDates || []} 
+              loading={loading} 
+            />
           </Col>
         </Row>
       </>
