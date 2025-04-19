@@ -3,13 +3,14 @@
 import { useRouter, useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { Layout, Card, Form, Input, Button, Select, Skeleton, message, Space, Tag, Descriptions, Row, Col, Typography } from 'antd';
-import { EditOutlined, SaveOutlined, CloseOutlined, DeleteOutlined } from '@ant-design/icons';
+import { EditOutlined, SaveOutlined, CloseOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { Usuario } from '@/types/usuario';
 import { 
   OPCIONES_GENERO, 
   OPCIONES_STATUS, 
 } from '@/constants/options';
 import UserQRCode from '@/components/UserQRCode';
+import NotificacionAlerta from '@/components/NotificacionAlerta';
 
 const { Content } = Layout;
 const { Option } = Select;
@@ -25,6 +26,16 @@ export default function UserDetailPage() {
   const [editMode, setEditMode] = useState(false);
   const [form] = Form.useForm();
   const [isQRCodeScanned, setIsQRCodeScanned] = useState(false);
+  const [mensajeQR, setMensajeQR] = useState('');
+  const [tipoQR, setTipoQR] = useState<'exito' | 'error'>('exito');
+  const [visibleQR, setVisibleQR] = useState(false);
+
+  const ocultarAlerta = () => {
+    setMensajeQR('');
+    setTipoQR('exito');
+    setVisibleQR(false);
+  };
+
   // Cargar datos del usuario
   useEffect(() => {
     if (userId) {
@@ -159,6 +170,25 @@ export default function UserDetailPage() {
     }
   };
 
+  const refreshQR = async (id: string) => {
+    try {
+      const response = await fetch(`/api/usuarios/${id}/refresh-qr`);
+      if (!response.ok) {
+        throw new Error('Error al refrescar el QR');
+      }
+      const data = await response.json();
+      setUsuario(data);
+      setMensajeQR('QR actualizado correctamente');
+      setTipoQR('exito');
+      setVisibleQR(true);
+    } catch (error) {
+      console.error('Error:', error);
+      setMensajeQR('No se pudo actualizar el QR');
+      setTipoQR('error');
+      setVisibleQR(true);
+    }
+  };
+
   return (
       <Content>
         <Card
@@ -174,6 +204,15 @@ export default function UserDetailPage() {
                 <Space>
                   {!editMode ? (
                     <>
+                     <Button 
+                      type="primary"
+                      icon={<ReloadOutlined />}
+                      onClick={() => {
+                        refreshQR(userId);
+                      }}
+                     >
+                      Refrescar QR
+                     </Button>
                       <Button 
                         type="primary" 
                         icon={<EditOutlined />} 
@@ -213,6 +252,13 @@ export default function UserDetailPage() {
           }
           style={{ boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}
         >
+          <NotificacionAlerta
+            mensaje={mensajeQR}
+            tipo={tipoQR}
+            visible={visibleQR}
+            onClose={ocultarAlerta}
+            duracion={5000}
+          />
           {/* Div para el QR */}
           <div style={{ marginBottom: '16px', textAlign: 'center' }}>
             {loading ? (
@@ -240,7 +286,7 @@ export default function UserDetailPage() {
                       <Tag color={getGrupoColor(usuario.grupo)}>{usuario.grupo}</Tag>
                     ) : "—"}
                   </Descriptions.Item>
-                  <Descriptions.Item label="Rol">{usuario?.role}</Descriptions.Item>
+                  <Descriptions.Item label="Invitado por">{usuario?.updated_by}</Descriptions.Item>
                   <Descriptions.Item label="Creado">
                     {usuario?.created_at ? new Date(usuario.created_at).toLocaleString() : "—"}
                   </Descriptions.Item>
