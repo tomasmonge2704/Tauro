@@ -2,7 +2,7 @@
 
 import { Table, Modal, Form, Input, Button, message, Space, Select, Pagination, Input as AntInput, Row, Col, Card, Slider, Tag, Popconfirm, Badge, Tooltip } from 'antd';
 import { useState, useEffect } from 'react';
-import { EditOutlined, DeleteOutlined, UserAddOutlined, SearchOutlined, FilterOutlined, ClearOutlined, WarningOutlined, CopyOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, UserAddOutlined, SearchOutlined, FilterOutlined, ClearOutlined, WarningOutlined } from '@ant-design/icons';
 import type { Usuario } from '@/types/usuario';
 import { ColumnsType } from 'antd/es/table';
 import { useRouter } from 'next/navigation';
@@ -15,6 +15,7 @@ import { isMobile } from 'react-device-detect';
 import { convertirMoneda } from '../utils/convertirMoneda';
 import NotificacionAlerta from '@/components/NotificacionAlerta';
 import useAlerta from '@/hooks/useAlerta';
+import CopyImageQR from '@/components/copyImageQR';
 
 const { Option } = Select;
 const { Search } = AntInput;
@@ -50,7 +51,7 @@ export default function UsersPage() {
   const [isBrowser, setIsBrowser] = useState(false);
   
   const { alerta, mostrarExito, mostrarError, ocultarAlerta } = useAlerta();
-  const mensaje = 'https://tauro-kappa.vercel.app/login?email=';
+
   useEffect(() => {
     setIsBrowser(true);
   }, []);
@@ -424,12 +425,7 @@ export default function UsersPage() {
       key: 'acciones',
       render: (_, record) => (
         <Space size="middle">
-          <Button 
-            type="dashed"
-            icon={<CopyOutlined />} 
-            onClick={() => navigator.clipboard.writeText(mensaje + record.email)}
-            size="small"
-          />
+          <CopyImageQR userId={record.id} nombre={record.nombre} xs={true} />
           <Button 
             type="dashed"
             icon={<EditOutlined />} 

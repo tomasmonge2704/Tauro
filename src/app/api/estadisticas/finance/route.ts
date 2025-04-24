@@ -9,7 +9,8 @@ export async function GET() {
       .select('monto_pago')
       .gt('monto_pago', 0);
     
-    const totalRecaudado = totalPagos?.reduce((acc, pago) => acc + pago.monto_pago, 0);
+    const totalRecaudado = totalPagos?.reduce((acc, pago) => acc + pago.monto_pago, 0) || 0;
+    const entradaPromedio = totalRecaudado / (totalPagos?.length || 1);
     if (error) {
       console.error('Error al obtener el total de pagos:', error);
     }
@@ -17,6 +18,7 @@ export async function GET() {
     return NextResponse.json({
       totalPagos: totalPagos?.length || 0,
       totalRecaudado,
+      entradaPromedio,
     });
     
   } catch (error) {

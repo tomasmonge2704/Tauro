@@ -11,7 +11,7 @@ import {
 } from '@/constants/options';
 import UserQRCode from '@/components/UserQRCode';
 import NotificacionAlerta from '@/components/NotificacionAlerta';
-
+import GenerateImageQR from '@/components/generateImageQR';
 const { Content } = Layout;
 const { Option } = Select;
 const { Title } = Typography;
@@ -204,6 +204,7 @@ export default function UserDetailPage() {
                 <Space>
                   {!editMode ? (
                     <>
+                     <GenerateImageQR userId={usuario?.id || ''} nombre={usuario?.nombre || ''}/>
                      <Button 
                       type="primary"
                       icon={<ReloadOutlined />}

@@ -27,6 +27,7 @@ interface FinanceData {
   totalUsuarios: number;
   totalRecaudado: number;
   totalPagos: number;
+  entradaPromedio: number;
 }
 
 interface Botella {
@@ -46,13 +47,14 @@ export default function DashboardPage() {
   const [financeError, setFinanceError] = useState<string | null>(null);
   const { themeMode } = useTheme();
   const botellasInicial = [
-    {nombre: 'Vodka', precio: 32500, porcentajeConsumo: 0.35, cantidad: 0, precioTotal: 0},
-    {nombre: 'Gin', precio: 30875, porcentajeConsumo: 0.40, cantidad: 0, precioTotal: 0},
-    {nombre: 'Fernet', precio: 37375, porcentajeConsumo: 0.25, cantidad: 0, precioTotal: 0},
+    {nombre: 'Vodka', precio: 25000, porcentajeConsumo: 0.35, cantidad: 0, precioTotal: 0},
+    {nombre: 'Gin', precio: 23750, porcentajeConsumo: 0.40, cantidad: 0, precioTotal: 0},
+    {nombre: 'Fernet', precio: 28750, porcentajeConsumo: 0.25, cantidad: 0, precioTotal: 0},
   ];
   const [botellas, setBotellas] = useState<Botella[]>(botellasInicial);
   const [totalBotellas, setTotalBotellas] = useState(0);
   const [cantidadTotalBotellas, setCantidadTotalBotellas] = useState(0);
+  const [costoBotellaPorPersona, setCostoBotellaPorPersona] = useState(0);
   const [total_a_pagar, setTotalAPagar] = useState(0);
 
   useEffect(() => {
@@ -113,7 +115,7 @@ export default function DashboardPage() {
   const porcentajeHombres = totalUsuarios > 0 ? (usuariosHombres / totalUsuarios) * 100 : 0;
   const porcentajeMujeres = totalUsuarios > 0 ? (usuariosMujeres / totalUsuarios) * 100 : 0;
   const totalAlquiler = 3500000;
-  const tragosPersona = 5;
+  const tragosPersona = 4;
   const tragosPorBotella = 15;
 
   // Efecto para calcular las botellas cuando cambien las estadísticas
@@ -133,6 +135,7 @@ export default function DashboardPage() {
     });
     setCantidadTotalBotellas(totalBotellas);
     setBotellas(nuevasBotellas);
+    setCostoBotellaPorPersona(calculatedTotalBotellas / totalUsuarios);
     setTotalBotellas(calculatedTotalBotellas);
     setTotalAPagar(calculatedTotalBotellas + totalAlquiler);
   }, [totalUsuarios, tragosPersona, tragosPorBotella, totalAlquiler]);
@@ -291,7 +294,7 @@ export default function DashboardPage() {
     return (
       <>
         <Row gutter={[16, 16]} style={{ width: '100%' }}>
-          <Col xs={12} sm={6}>
+          <Col xs={12} sm={4}>
             <Card style={{ height: '100%' }}>
               <Statistic
                 title="Total Usuarios"
@@ -300,7 +303,7 @@ export default function DashboardPage() {
               />
             </Card>
           </Col>
-          <Col xs={12} sm={6}>
+          <Col xs={12} sm={4}>
             <Card>
               <Statistic
                 title="Total Pagos Registrados"
@@ -308,7 +311,15 @@ export default function DashboardPage() {
               />
             </Card>
           </Col>
-          <Col xs={24} sm={6}>
+          <Col xs={12} sm={5}>
+            <Card>
+              <Statistic
+                title="Entrada Promedio"
+                value={convertirMoneda(financeData?.entradaPromedio || 0)}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={5}>
             <Card>
               <Statistic
                 title="Total Recaudado"
@@ -356,7 +367,12 @@ export default function DashboardPage() {
                         {cantidadTotalBotellas}
                       </Text>
                     </div>
-
+                    <div style={{ padding: '8px 0' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text>Costo unitario de botella por persona</Text>
+                        <Text>{convertirMoneda(costoBotellaPorPersona)}</Text>
+                      </div>
+                    </div>
                     <div style={{ padding: '8px 0' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Text>Costo de botellas</Text>
