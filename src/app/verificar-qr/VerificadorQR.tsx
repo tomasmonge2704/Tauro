@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Card, Button, Result, Spin, Typography, Tag, Space, Alert } from 'antd';
 import { CameraOutlined, QrcodeOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useTheme } from '@/context/ThemeContext';
-import { Html5Qrcode } from 'html5-qrcode';
+import QrScanner from 'qr-scanner';
 
 const { Text } = Typography;
 
@@ -25,11 +25,10 @@ const VerificadorQR = () => {
   const [cameraPermission, setCameraPermission] = useState<boolean | null>(null);
   const { themeMode } = useTheme();
   const [mensajeEstado, setMensajeEstado] = useState<string>('Listo para escanear');
-  const qrScannerRef = useRef<Html5Qrcode | null>(null);
-  const scannerDivId = 'qr-reader';
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const qrScannerRef = useRef<QrScanner | null>(null);
 
   useEffect(() => {
-    // Verificar permisos de cámara al cargar el componente
     const checkCameraPermission = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -44,123 +43,45 @@ const VerificadorQR = () => {
 
     checkCameraPermission();
 
-    // Limpiar el scanner cuando el componente se desmonte
     return () => {
-      if (qrScannerRef.current && qrScannerRef.current.isScanning) {
-        qrScannerRef.current.stop().catch(err => console.error("Error al detener el escáner:", err));
+      if (qrScannerRef.current) {
+        qrScannerRef.current.destroy();
       }
     };
   }, []);
 
-  // Efecto para iniciar el escáner cuando el componente esté listo
   useEffect(() => {
-    if (escaneando) {
+    if (escaneando && videoRef.current) {
       const startScanner = async () => {
         try {
-          // Aseguramos que el div existe antes de inicializar el escáner
-          const scannerElement = document.getElementById(scannerDivId);
-          if (scannerElement) {
-            // Si ya existe una instancia anterior, asegúrate de limpiarla
-            if (qrScannerRef.current) {
-              await qrScannerRef.current.clear();
-            }
-            
-            qrScannerRef.current = new Html5Qrcode(scannerDivId);
-            
-            let isMounted = true; // Flag para verificar si el componente sigue montado
-            
-            // Guardamos referencia al componente montado
-            const currentQrScanner = qrScannerRef.current;
-            
-            try {
-              const cameras = await Html5Qrcode.getCameras();
-              
-              // Verificar si el componente sigue montado después de obtener las cámaras
-              if (!isMounted) return;
-              
-              if (cameras && cameras.length > 0) {
-                // Calcular un tamaño relativo para el qrbox basado en el contenedor
-                const width = scannerElement.offsetWidth;
-                const height = 300; // Altura fija para el contenedor de escaneo
-                const qrboxSize = Math.min(width, height) * 0.7; // 70% del lado más pequeño
-                
-                console.log('Iniciando escáner con cámara:', cameras[cameras.length - 1].id);
-                console.log('Dimensiones del contenedor:', width, height);
-                console.log('Tamaño del qrbox:', qrboxSize);
-                
-                // Configuración...
-                const config = {
-                  fps: 10,
-                  qrbox: {
-                    width: qrboxSize,
-                    height: qrboxSize
-                  },
-                  aspectRatio: 1.0,
-                  disableFlip: false
-                };
-                
-                // Manejamos explícitamente la promesa
-                try {
-                  await currentQrScanner.start(
-                    { facingMode: "environment" },
-                    config,
-                    (decodedText) => {
-                      if (isMounted) {
-                        console.log("QR detectado:", decodedText);
-                        procesarResultadoQR(decodedText);
-                      }
-                    },
-                    (errorMessage) => {
-                      if (isMounted) {
-                        console.log("Error durante el escaneo:", errorMessage);
-                      }
-                    }
-                  );
-                  
-                  // Verificamos si el componente sigue montado después de iniciar
-                  if (!isMounted) {
-                    currentQrScanner.stop().catch(() => {});
-                    return;
-                  }
-                  
-                  // Resto del código...
-                } catch (startError) {
-                  if (isMounted) {
-                    console.error("Error al iniciar el escáner:", startError);
-                    setError("Error al iniciar el escáner de códigos QR");
-                    setEscaneando(false);
-                  }
-                }
-              } else {
-                setError("No se encontraron cámaras disponibles");
-                setEscaneando(false);
-              }
-            } catch (cameraError) {
-              if (isMounted) {
-                console.error("Error al obtener cámaras:", cameraError);
-                setError("Error al obtener cámaras");
-                setEscaneando(false);
-              }
-            }
-            
-            // Función para limpiar
-            return () => {
-              isMounted = false;
-              if (currentQrScanner && currentQrScanner.isScanning) {
-                currentQrScanner.stop().catch(() => {});
-              }
-            };
-          } else {
-            setError("No se pudo encontrar el elemento para el escáner QR");
-            setEscaneando(false);
+          if (qrScannerRef.current) {
+            qrScannerRef.current.destroy();
           }
+
+          qrScannerRef.current = new QrScanner(
+            videoRef.current as HTMLVideoElement,
+            (result) => {
+              if (result) {
+                console.log("QR detectado:", result.data);
+                procesarResultadoQR(result.data);
+              }
+            },
+            {
+              preferredCamera: 'environment',
+              highlightScanRegion: true,
+              highlightCodeOutline: true,
+              maxScansPerSecond: 5,
+            }
+          );
+
+          await qrScannerRef.current.start();
         } catch (err) {
           console.error("Error al iniciar el escáner:", err);
           setError("Error al iniciar el escáner de códigos QR");
           setEscaneando(false);
         }
       };
-      
+
       startScanner();
     }
   }, [escaneando]);
@@ -172,7 +93,7 @@ const VerificadorQR = () => {
   };
 
   const detenerEscaneo = async () => {
-    if (qrScannerRef.current && qrScannerRef.current.isScanning) {
+    if (qrScannerRef.current) {
       try {
         await qrScannerRef.current.stop();
         setMensajeEstado('Escaneo detenido');
@@ -192,7 +113,6 @@ const VerificadorQR = () => {
       setMensajeEstado('Verificando código QR...');
       console.log('QR Token detectado:', qrToken);
       
-      // Enviar el token al servidor para verificación
       const response = await fetch('/api/validar-qr', {
         method: 'POST',
         headers: {
@@ -220,17 +140,14 @@ const VerificadorQR = () => {
     <Card
       style={{ 
         width: '100%',
-        maxWidth: '500px', 
+        height: '60vh',
         margin: '0 auto',
         backgroundColor: themeMode === 'dark' ? '#1f1f1f' : '#fff',
-        zIndex: 100
       }}
     >
       {cameraPermission === null ? (
         <div style={{ textAlign: 'center', padding: '20px' }}>
-          <Spin tip="Verificando permisos de cámara...">
-            <div style={{ height: '100px' }} />
-          </Spin>
+          <Spin tip="Verificando permisos de cámara..."/>
         </div>
       ) : cameraPermission === false ? (
         <Alert
@@ -241,9 +158,7 @@ const VerificadorQR = () => {
         />
       ) : verificando ? (
         <div style={{ textAlign: 'center', padding: '20px' }}>
-          <Spin tip={mensajeEstado}>
-            <div style={{ height: '100px' }} />
-          </Spin>
+          <Spin tip={mensajeEstado} />
         </div>
       ) : resultado ? (
         resultado.valid ? (
@@ -315,43 +230,12 @@ const VerificadorQR = () => {
             }}
           >
             {escaneando ? (
-              <>
-                <div id={scannerDivId} style={{ 
-                  width: '100%', 
-                  height: '300px',
-                  position: 'relative'
-                }}>
-                </div>
-                <div style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  border: '3px solid #1677ff',
-                  boxShadow: '0 0 0 100vmax rgba(0, 0, 0, 0.5)',
-                  zIndex: 102,
-                  pointerEvents: 'none',
-                  width: '70%',
-                  height: '70%',
-                  maxWidth: '250px',
-                  maxHeight: '250px',
-                  borderRadius: '10px',
-                  animation: 'pulse 2s infinite'
-                }}></div>
-                <style jsx>{`
-                  @keyframes pulse {
-                    0% {
-                      box-shadow: 0 0 0 0 rgba(22, 119, 255, 0.4), 0 0 0 100vmax rgba(0, 0, 0, 0.5);
-                    }
-                    70% {
-                      box-shadow: 0 0 0 10px rgba(22, 119, 255, 0), 0 0 0 100vmax rgba(0, 0, 0, 0.5);
-                    }
-                    100% {
-                      box-shadow: 0 0 0 0 rgba(22, 119, 255, 0), 0 0 0 100vmax rgba(0, 0, 0, 0.5);
-                    }
-                  }
-                `}</style>
-              </>
+              <video
+                ref={videoRef}
+                style={{
+                  width: '100%',
+                }}
+              />
             ) : (
               <Text type="secondary" style={{ textAlign: 'center', padding: '30px' }}>
                 <QrcodeOutlined style={{ fontSize: '32px', marginBottom: '8px', display: 'block' }} />

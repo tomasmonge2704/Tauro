@@ -1,158 +1,38 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Layout, Card, Row, Col, Statistic, Spin, Typography, Alert, Tabs, Collapse } from 'antd';
-import { ManOutlined, WomanOutlined, TeamOutlined, CalendarOutlined } from '@ant-design/icons';
+import { Layout, Card, Row, Col, Statistic, Spin, Typography, Alert, Tabs, Collapse, InputNumber, Input, Button } from 'antd';
+import { ManOutlined, WomanOutlined, TeamOutlined, CalendarOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { Pie } from '@ant-design/charts';
 import { useTheme } from '@/context/ThemeContext';
 import { convertirMoneda } from '../utils/convertirMoneda';
 import GrupoBarChart from '@/components/GrupoBarChart';
 import CrecimientoUsuariosChart from '@/components/CrecimientoUsuariosChart';
+import { useDashboardState } from './hooks/useDashboardState';
 
 const { Content } = Layout;
 const { Text } = Typography;
 const { TabPane } = Tabs;
 
-// Interfaz para los datos de estadísticas
-interface EstadisticasData {
-  generoStats: { Hombre: number; Mujer: number };
-  statusStats: { status: string; count: number }[];
-  grupoStats: { grupo: string; count: number }[];
-  creationDates: { id: number | string; created_at: string }[];
-  edadPromedio: number;
-}
-
-// Interfaz para los datos financieros
-interface FinanceData {
-  totalUsuarios: number;
-  totalRecaudado: number;
-  totalPagos: number;
-  entradaPromedio: number;
-}
-
-interface Botella {
-  nombre: string;
-  precio: number;
-  porcentajeConsumo: number;
-  cantidad: number;
-  precioTotal: number;
-}
-
 export default function DashboardPage() {
-  const [estadisticas, setEstadisticas] = useState<EstadisticasData | null>(null);
-  const [financeData, setFinanceData] = useState<FinanceData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [financeLoading, setFinanceLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [financeError, setFinanceError] = useState<string | null>(null);
   const { themeMode } = useTheme();
-  const botellasInicial = [
-    {nombre: 'Vodka', precio: 25000, porcentajeConsumo: 0.35, cantidad: 0, precioTotal: 0},
-    {nombre: 'Gin', precio: 23750, porcentajeConsumo: 0.40, cantidad: 0, precioTotal: 0},
-    {nombre: 'Fernet', precio: 28750, porcentajeConsumo: 0.25, cantidad: 0, precioTotal: 0},
-  ];
-  const [botellas, setBotellas] = useState<Botella[]>(botellasInicial);
-  const [totalBotellas, setTotalBotellas] = useState(0);
-  const [cantidadTotalBotellas, setCantidadTotalBotellas] = useState(0);
-  const [costoBotellaPorPersona, setCostoBotellaPorPersona] = useState(0);
-  const [total_a_pagar, setTotalAPagar] = useState(0);
-
-  useEffect(() => {
-    const fetchEstadisticas = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/estadisticas');
-        
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        setEstadisticas(data);
-        setError(null);
-      } catch (error) {
-        console.error('Error al cargar estadísticas:', error);
-        setError('No se pudieron cargar los datos. Por favor, intenta de nuevo más tarde.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchEstadisticas();
-  }, []);
-
-  // Obtener datos financieros
-  useEffect(() => {
-    const fetchFinanceData = async () => {
-      try {
-        setFinanceLoading(true);
-        const response = await fetch('/api/estadisticas/finance');
-        
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        setFinanceData(data);
-        setFinanceError(null);
-      } catch (error) {
-        console.error('Error al cargar datos financieros:', error);
-        setFinanceError('No se pudieron cargar los datos financieros. Por favor, intenta de nuevo más tarde.');
-      } finally {
-        setFinanceLoading(false);
-      }
-    };
-
-    fetchFinanceData();
-  }, []);
-
-  // Calcular estadísticas de género
-  const usuariosHombres = estadisticas?.generoStats?.Hombre || 0;
-  const usuariosMujeres = estadisticas?.generoStats?.Mujer || 0;
-
-  // Calcular porcentajes
-  const totalUsuarios = usuariosHombres + usuariosMujeres;
-  const porcentajeHombres = totalUsuarios > 0 ? (usuariosHombres / totalUsuarios) * 100 : 0;
-  const porcentajeMujeres = totalUsuarios > 0 ? (usuariosMujeres / totalUsuarios) * 100 : 0;
-  const totalAlquiler = 3500000;
-  const tragosPersona = 4;
-  const tragosPorBotella = 15;
-
-  // Efecto para calcular las botellas cuando cambien las estadísticas
-  useEffect(() => {
-    const preTotalBotellas = Math.ceil(totalUsuarios * tragosPersona / tragosPorBotella);
-    let totalBotellas = 0;
-    let calculatedTotalBotellas = 0;
-    const nuevasBotellas = botellasInicial.map(botella => {
-      const cantidadBotellasTipo = Math.ceil(preTotalBotellas * botella.porcentajeConsumo);
-      totalBotellas += cantidadBotellasTipo;
-      calculatedTotalBotellas += cantidadBotellasTipo * botella.precio;
-      return {
-        ...botella,
-        cantidad: cantidadBotellasTipo,
-        precioTotal: cantidadBotellasTipo * botella.precio
-      };
-    });
-    setCantidadTotalBotellas(totalBotellas);
-    setBotellas(nuevasBotellas);
-    setCostoBotellaPorPersona(calculatedTotalBotellas / totalUsuarios);
-    setTotalBotellas(calculatedTotalBotellas);
-    setTotalAPagar(calculatedTotalBotellas + totalAlquiler);
-  }, [totalUsuarios, tragosPersona, tragosPorBotella, totalAlquiler]);
-
-  // Calcular diferencia de porcentaje
-  const diferenciaPorcentaje = Math.abs(porcentajeHombres - porcentajeMujeres);
-
-  // Datos para el gráfico de género
-  const datosGenero = [
-    { type: 'Hombres', value: usuariosHombres },
-    { type: 'Mujeres', value: usuariosMujeres },
-  ].filter(item => item.value > 0);
+  const {
+    state,
+    calculations,
+    updateEditableTotalUsuarios,
+    updateEditableTotalPagos,
+    updateEditableTotalAlquiler,
+    handleBotellaChange,
+    handleAddBotella,
+    handleRemoveBotella,
+  } = useDashboardState();
 
   // Configuración del gráfico de género
   const configGenero = {
     appendPadding: 10,
-    data: datosGenero,
+    data: [
+      { type: 'Hombres', value: calculations.usuariosHombres },
+      { type: 'Mujeres', value: calculations.usuariosMujeres },
+    ].filter(item => item.value > 0),
     angleField: 'value',
     colorField: 'type',
     radius: 0.8,
@@ -170,7 +50,7 @@ export default function DashboardPage() {
 
   // Renderizar el contenido del tab General
   const renderGeneralContent = () => {
-    if (loading) {
+    if (state.loading) {
       return (
         <div style={{ padding: '24px', textAlign: 'center' }}>
           <Spin size="large" tip="Cargando estadísticas...">
@@ -180,12 +60,12 @@ export default function DashboardPage() {
       );
     }
 
-    if (error) {
+    if (state.error) {
       return (
         <div style={{ padding: '24px' }}>
           <Alert
             message="Error"
-            description={error}
+            description={state.error}
             type="error"
             showIcon
           />
@@ -201,7 +81,7 @@ export default function DashboardPage() {
             <Card style={{ width: '100%' }}>
               <Statistic
                 title="Total Usuarios"
-                value={totalUsuarios}
+                value={calculations.totalUsuarios}
                 prefix={<TeamOutlined />}
               />
             </Card>
@@ -210,7 +90,7 @@ export default function DashboardPage() {
             <Card>
               <Statistic
                 title="Edad Promedio"
-                value={estadisticas?.edadPromedio || 0}
+                value={state.estadisticas?.edadPromedio || 0}
                 prefix={<CalendarOutlined />}
                 suffix="años"
               />
@@ -220,13 +100,13 @@ export default function DashboardPage() {
             <Card>
               <Statistic
                 title="Hombres / Mujeres"
-                value={totalUsuarios}
+                value={calculations.totalUsuarios}
                 formatter={() => (
                   <span>
-                    <ManOutlined style={{ color: '#1677ff' }} /> {usuariosHombres}
-                    <WomanOutlined style={{ color: '#ff4d4f', marginLeft: '8px' }} /> {usuariosMujeres}
+                    <ManOutlined style={{ color: '#1677ff' }} /> {calculations.usuariosHombres}
+                    <WomanOutlined style={{ color: '#ff4d4f', marginLeft: '8px' }} /> {calculations.usuariosMujeres}
                     <Text style={{ marginLeft: '8px' }}>
-                      {diferenciaPorcentaje.toFixed(1)}%
+                      {calculations.diferenciaPorcentaje.toFixed(1)}%
                     </Text>
                   </span>
                 )}
@@ -239,7 +119,7 @@ export default function DashboardPage() {
         <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
           <Col xs={24} md={12}>
             <Card title="Distribución por Género">
-              {datosGenero.length > 0 ? (
+              {configGenero.data.length > 0 ? (
                 <Pie {...configGenero} />
               ) : (
                 <div style={{ textAlign: 'center', padding: '20px' }}>
@@ -249,7 +129,7 @@ export default function DashboardPage() {
             </Card>
           </Col>
           <Col xs={24} md={12}>
-            <GrupoBarChart data={estadisticas?.grupoStats || []} loading={loading} />
+            <GrupoBarChart data={state.estadisticas?.grupoStats || []} loading={state.loading} />
           </Col>
         </Row>
 
@@ -257,8 +137,8 @@ export default function DashboardPage() {
         <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
           <Col xs={24}>
             <CrecimientoUsuariosChart 
-              data={estadisticas?.creationDates || []} 
-              loading={loading} 
+              data={state.estadisticas?.creationDates || []} 
+              loading={state.loading} 
             />
           </Col>
         </Row>
@@ -268,7 +148,7 @@ export default function DashboardPage() {
 
   // Renderizar el contenido del tab de Reporte Financiero
   const renderFinanceContent = () => {
-    if (financeLoading) {
+    if (state.financeLoading) {
       return (
         <div style={{ padding: '24px', textAlign: 'center' }}>
           <Spin size="large" tip="Cargando datos financieros...">
@@ -278,12 +158,12 @@ export default function DashboardPage() {
       );
     }
 
-    if (financeError) {
+    if (state.financeError) {
       return (
         <div style={{ padding: '24px' }}>
           <Alert
             message="Error"
-            description={financeError}
+            description={state.financeError}
             type="error"
             showIcon
           />
@@ -298,7 +178,7 @@ export default function DashboardPage() {
             <Card style={{ height: '100%' }}>
               <Statistic
                 title="Total Usuarios"
-                value={totalUsuarios}
+                value={calculations.totalUsuarios}
                 prefix={<TeamOutlined />}
               />
             </Card>
@@ -307,15 +187,15 @@ export default function DashboardPage() {
             <Card>
               <Statistic
                 title="Total Pagos Registrados"
-                value={financeData?.totalPagos || 0}
+                value={state.financeData?.totalPagos || 0}
               />
             </Card>
           </Col>
-          <Col xs={12} sm={5}>
-            <Card>
-              <Statistic
+          <Col xs={24} sm={5}>
+            <Card style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <Statistic
                 title="Entrada Promedio"
-                value={convertirMoneda(financeData?.entradaPromedio || 0)}
+                value={convertirMoneda(state.financeData?.entradaPromedio || 0)}
               />
             </Card>
           </Col>
@@ -323,7 +203,7 @@ export default function DashboardPage() {
             <Card>
               <Statistic
                 title="Total Recaudado"
-                value={convertirMoneda(financeData?.totalRecaudado || 0)}
+                value={convertirMoneda(state.financeData?.totalRecaudado || 0)}
               />
             </Card>
           </Col>
@@ -331,7 +211,7 @@ export default function DashboardPage() {
             <Card>
               <Statistic
                 title="Total a Recaudar"
-                value={convertirMoneda(total_a_pagar)}
+                value={convertirMoneda(calculations.totalAPagar)}
               />
             </Card>
           </Col>
@@ -343,17 +223,17 @@ export default function DashboardPage() {
               <div style={{ padding: '20px', textAlign: 'center' }}>
                 <Statistic
                   title="Balance"
-                  value={(financeData?.totalRecaudado || 0) - total_a_pagar}
+                  value={calculations.balance}
                   precision={2}
                   valueStyle={{ 
-                    color: (financeData?.totalRecaudado || 0) > total_a_pagar ? '#3f8600' : '#cf1322' 
+                    color: calculations.balance > 0 ? '#3f8600' : '#cf1322' 
                   }}
-                  prefix={(financeData?.totalRecaudado || 0) > total_a_pagar ? 
+                  prefix={calculations.balance > 0 ? 
                     <span>+</span> : <span>-</span>}
                   formatter={(value) => convertirMoneda(Math.abs(Number(value)))}
                 />
                 <Text style={{ display: 'block', marginTop: '10px' }}>
-                  {(financeData?.totalRecaudado || 0) > total_a_pagar ? 
+                  {calculations.balance > 0 ? 
                     'Recaudación superior a lo necesario' : 
                     'Recaudación inferior a lo necesario'}
                 </Text>
@@ -364,24 +244,24 @@ export default function DashboardPage() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' }}>
                       <Text>Cantidad de botellas</Text>
                       <Text>
-                        {cantidadTotalBotellas}
+                        {calculations.cantidadTotalBotellas}
                       </Text>
                     </div>
                     <div style={{ padding: '8px 0' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Text>Costo unitario de botella por persona</Text>
-                        <Text>{convertirMoneda(costoBotellaPorPersona)}</Text>
+                        <Text>{convertirMoneda(calculations.costoBotellaPorPersona)}</Text>
                       </div>
                     </div>
                     <div style={{ padding: '8px 0' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Text>Costo de botellas</Text>
-                        <Text>{convertirMoneda(totalBotellas)}</Text>
+                        <Text>{convertirMoneda(calculations.totalBotellas)}</Text>
                       </div>
                       <Collapse ghost>
                         <Collapse.Panel key="1" header={<div style={{ textAlign: 'right' }}><small>Ver detalle</small></div>} style={{ padding: 0 }}>
                           <div style={{ padding: '10px', background: 'rgba(0,0,0,0.02)', borderRadius: '4px', marginTop: '5px' }}>
-                            {botellas.map((botella, index) => {
+                            {state.editableBotellas.map((botella, index) => {
                               return (
                                 <div key={index} style={{ display: 'flex', justifyContent: 'space-between', margin: '5px 0' }}>
                                   <Text>{botella.nombre} ({botella.cantidad} unidades)</Text>
@@ -396,7 +276,7 @@ export default function DashboardPage() {
                     
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' }}>
                       <Text>Costo de alquiler</Text>
-                      <Text strong>{convertirMoneda(totalAlquiler)}</Text>
+                      <Text strong>{convertirMoneda(state.editableTotalAlquiler)}</Text>
                     </div>
                     
                     <div style={{ height: '1px', background: 'rgba(0,0,0,0.06)' }} />
@@ -404,7 +284,7 @@ export default function DashboardPage() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', marginTop: '5px', background: 'rgba(0,0,0,0.03)', borderRadius: '4px' }}>
                       <Text strong>Total a recaudar</Text>
                       <Text strong style={{ fontSize: '16px' }}>
-                        {convertirMoneda(total_a_pagar)}
+                        {convertirMoneda(calculations.totalAPagar)}
                       </Text>
                     </div>
                   </div>
@@ -416,7 +296,278 @@ export default function DashboardPage() {
       </>
     );
   };
-  
+
+  // Renderizar el contenido del tab de Proyección de ingresos
+  const renderProyeccionContent = () => {
+    if (state.financeLoading) {
+      return (
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          <Spin size="large" tip="Cargando datos financieros...">
+            <div style={{ padding: '50px', background: 'rgba(0,0,0,0.05)' }} />
+          </Spin>
+        </div>
+      );
+    }
+
+    if (state.financeError) {
+      return (
+        <div style={{ padding: '24px' }}>
+          <Alert
+            message="Error"
+            description={state.financeError}
+            type="error"
+            showIcon
+          />
+        </div>
+      );
+    }
+
+    const calcularTotalBotellas = () => {
+      return state.editableBotellas.reduce((total, botella) => total + botella.precioTotal, 0);
+    };
+
+    const calcularTotalAPagar = () => {
+      return calcularTotalBotellas() + state.editableTotalAlquiler;
+    };
+
+    return (
+      <>
+        <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+          <Col xs={24}>
+            <Card title="Gestión de Botellas">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {state.editableBotellas.map((botella, index) => (
+                  <div key={index} style={{ 
+                    display: 'flex', 
+                    gap: '16px', 
+                    alignItems: 'center',
+                    padding: '16px',
+                    background: 'rgba(0,0,0,0.02)',
+                    borderRadius: '8px'
+                  }}>
+                    <Input
+                      placeholder="Nombre de la botella"
+                      value={botella.nombre}
+                      onChange={(e) => {
+                        const nuevasBotellas = [...state.editableBotellas];
+                        nuevasBotellas[index].nombre = e.target.value;
+                        handleBotellaChange(index, 'nombre', e.target.value);
+                      }}
+                      style={{ width: '200px' }}
+                    />
+                    <InputNumber
+                      addonBefore="Precio"
+                      value={botella.precio}
+                      onChange={(value) => handleBotellaChange(index, 'precio', value || 0)}
+                      min={0}
+                      style={{ width: '150px' }}
+                    />
+                    <InputNumber
+                      addonBefore="% Consumo"
+                      value={botella.porcentajeConsumo}
+                      onChange={(value) => handleBotellaChange(index, 'porcentajeConsumo', value || 0)}
+                      min={0}
+                      max={1}
+                      step={0.1}
+                      style={{ width: '150px' }}
+                    />
+                    <InputNumber
+                      addonBefore="Cantidad"
+                      value={botella.cantidad}
+                      onChange={(value) => handleBotellaChange(index, 'cantidad', value || 0)}
+                      min={0}
+                      style={{ width: '150px' }}
+                    />
+                    <Text strong style={{ minWidth: '100px' }}>
+                      Total: {convertirMoneda(botella.precioTotal)}
+                    </Text>
+                    <Button 
+                      type="primary" 
+                      danger 
+                      onClick={() => handleRemoveBotella(index)}
+                      icon={<DeleteOutlined />}
+                    />
+                  </div>
+                ))}
+                <Button 
+                  type="dashed" 
+                  onClick={handleAddBotella}
+                  icon={<PlusOutlined />}
+                  style={{ width: '100%' }}
+                >
+                  Agregar Botella
+                </Button>
+              </div>
+            </Card>
+          </Col>
+        </Row>
+
+        <Row gutter={[16, 16]} style={{ width: '100%' }}>
+          <Col xs={12} sm={4}>
+            <Card style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', height: '100%' }}>
+                <Text>Total Usuarios</Text>
+                <InputNumber
+                  value={state.editableTotalUsuarios}
+                  onChange={(value) => updateEditableTotalUsuarios(value || 0)}
+                  min={0}
+                  style={{ width: '100%' }}
+                />
+              </div>
+            </Card>
+          </Col>
+          <Col xs={12} sm={4}>
+            <Card style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', height: '100%' }}>
+                <Text>Total Pagos Registrados</Text>
+                <InputNumber
+                  value={state.editableTotalPagos}
+                  onChange={(value) => updateEditableTotalPagos(value || 0)}
+                  min={0}
+                  style={{ width: '100%' }}
+                />
+              </div>
+            </Card>
+          </Col>
+          <Col xs={24} sm={5}>
+            <Card style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <Statistic
+                title="Entrada Promedio"
+                value={convertirMoneda(state.financeData?.entradaPromedio || 0)}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={5}>
+            <Card style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <Statistic
+                title={calculations.esProyeccion ? "Total Recaudado Proyectado" : "Total Recaudado"}
+                value={convertirMoneda(calculations.esProyeccion ? calculations.totalRecaudadoProyectado : state.financeData?.totalRecaudado || 0)}
+                valueStyle={{ 
+                  color: calculations.esProyeccion ? '#1677ff' : undefined 
+                }}
+              />
+              {calculations.esProyeccion && (
+                <Text type="secondary" style={{ display: 'block', fontSize: '12px', marginTop: '8px' }}>
+                  Basado en un promedio de {convertirMoneda(calculations.entradaPromedio)} por persona
+                </Text>
+              )}
+            </Card>
+          </Col>
+          <Col xs={24} sm={6}>
+            <Card style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <Statistic
+                title="Total a Recaudar"
+                value={convertirMoneda(calcularTotalAPagar())}
+              />
+            </Card>
+          </Col>
+        </Row>
+        
+        <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
+          <Col xs={24}>
+            <Card title="Resumen Financiero">
+              <div style={{ padding: '20px', textAlign: 'center' }}>
+                <Statistic
+                  title="Balance Proyectado"
+                  value={calculations.balance}
+                  precision={2}
+                  valueStyle={{ 
+                    color: calculations.balance > 0 ? '#3f8600' : '#cf1322',
+                    ...(calculations.esProyeccion && { fontStyle: 'italic' })
+                  }}
+                  prefix={calculations.balance > 0 ? 
+                    <span>+</span> : <span>-</span>}
+                  formatter={(value) => convertirMoneda(Math.abs(Number(value)))}
+                />
+                <Text style={{ display: 'block', marginTop: '10px' }}>
+                  {calculations.balance > 0 ? 
+                    'Recaudación proyectada superior a lo necesario' : 
+                    'Recaudación proyectada inferior a lo necesario'}
+                </Text>
+                
+                <div style={{ marginTop: '20px', textAlign: 'left', background: 'rgba(0,0,0,0.02)', padding: '20px', borderRadius: '8px' }}>                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' }}>
+                      <Text>Cantidad de botellas</Text>
+                      <Text>
+                        {state.editableBotellas.reduce((total, botella) => total + botella.cantidad, 0)}
+                      </Text>
+                    </div>
+                    <div style={{ padding: '8px 0' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text>Costo unitario de botella por persona</Text>
+                        <Text>{convertirMoneda(calcularTotalBotellas() / (state.editableTotalPagos || 1))}</Text>
+                      </div>
+                    </div>
+                    <div style={{ padding: '8px 0' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text>Costo de botellas</Text>
+                        <Text>{convertirMoneda(calcularTotalBotellas())}</Text>
+                      </div>
+                      <Collapse ghost>
+                        <Collapse.Panel key="1" header={<div style={{ textAlign: 'right' }}><small>Ver detalle</small></div>} style={{ padding: 0 }}>
+                          <div style={{ padding: '10px', background: 'rgba(0,0,0,0.02)', borderRadius: '4px', marginTop: '5px' }}>
+                            {state.editableBotellas.map((botella, index) => {
+                              return (
+                                <div key={index} style={{ display: 'flex', flexDirection: 'column', gap: '8px', margin: '5px 0' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <Text>{botella.nombre}</Text>
+                                    <Text>{convertirMoneda(botella.precioTotal)}</Text>
+                                  </div>
+                                  <div style={{ display: 'flex', gap: '8px' }}>
+                                    <InputNumber
+                                      addonBefore="Cantidad"
+                                      value={botella.cantidad}
+                                      onChange={(value) => handleBotellaChange(index, 'cantidad', value || 0)}
+                                      min={0}
+                                      style={{ width: '100%' }}
+                                    />
+                                    <InputNumber
+                                      addonBefore="Precio"
+                                      value={botella.precio}
+                                      onChange={(value) => handleBotellaChange(index, 'precio', value || 0)}
+                                      min={0}
+                                      style={{ width: '100%' }}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </Collapse.Panel>
+                      </Collapse>
+                    </div>
+                    
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' }}>
+                      <Text>Costo de alquiler</Text>
+                      <InputNumber
+                        value={state.editableTotalAlquiler}
+                        onChange={(value) => updateEditableTotalAlquiler(value || 0)}
+                        min={0}
+                        style={{ width: '200px' }}
+                        formatter={value => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                        parser={value => Number(value!.replace(/\$\s?|(,*)/g, ''))}
+                      />
+                    </div>
+                    
+                    <div style={{ height: '1px', background: 'rgba(0,0,0,0.06)' }} />
+                    
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', marginTop: '5px', background: 'rgba(0,0,0,0.03)', borderRadius: '4px' }}>
+                      <Text strong>Total a recaudar</Text>
+                      <Text strong style={{ fontSize: '16px' }}>
+                        {convertirMoneda(calcularTotalAPagar())}
+                      </Text>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </Col>
+        </Row>
+      </>
+    );  
+  };
+
   return (
     <Content style={{ padding: '16px' }}>
       <Tabs defaultActiveKey="general" size="large">
@@ -425,6 +576,9 @@ export default function DashboardPage() {
         </TabPane>
         <TabPane tab="Reporte Financiero" key="finance">
           {renderFinanceContent()}
+        </TabPane>
+        <TabPane tab="Proyección de ingresos" key="proyeccion">
+          {renderProyeccionContent()}
         </TabPane>
       </Tabs>
       

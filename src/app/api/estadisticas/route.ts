@@ -59,15 +59,21 @@ export async function GET() {
       console.log(`Primera fecha: ${creationDates[0].created_at}, Última fecha: ${creationDates[creationDates.length - 1].created_at}`);
     }
 
-    // Mockear edad promedio
-    const edadPromedio = 0;
+    const { data: edadPromedioData = [] } = await supabase
+      .from('users')
+      .select('edad')
+      .order('edad', { ascending: true });
+
+    const edadPromedio = edadPromedioData && edadPromedioData.length > 0 
+      ? edadPromedioData.reduce((acc, user) => acc + user.edad, 0) / edadPromedioData.length 
+      : 0;
     
     return NextResponse.json({
       totalUsuarios: totalUsuarios[0]?.count || 0,
       generoStats,
       grupoStats,
       creationDates,
-      edadPromedio
+      edadPromedio: edadPromedio.toFixed(0)
     });
     
   } catch (error) {
