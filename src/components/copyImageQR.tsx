@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import html2canvas from 'html2canvas';
 import QRCode from 'qrcode';
 import { createRoot } from 'react-dom/client';
+import NotificacionAlerta from './NotificacionAlerta';
 
 interface CopyImageQRProps {
   userId: string;
@@ -98,6 +99,7 @@ const HTMLDocument = ({ nombre, qrCodeUrl }: { nombre: string, qrCodeUrl: string
 export default function CopyImageQR({ userId, nombre, xs }: CopyImageQRProps) {
   const [isCopying, setIsCopying] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState('');
+  const [showAlert, setShowAlert] = useState(false);
 
   useEffect(() => {
     const generateQR = async () => {
@@ -168,15 +170,38 @@ export default function CopyImageQR({ userId, nombre, xs }: CopyImageQRProps) {
       resizedCanvas.toBlob(async (blob) => {
         if (blob) {
           try {
-            await navigator.clipboard.write([
-              new ClipboardItem({
-                'image/png': blob
-              })
-            ]);
-            message.success('Imagen copiada al portapapeles');
+            // Verificar si la API del portapapeles está disponible
+            if (navigator.clipboard && navigator.clipboard.write) {
+              await navigator.clipboard.write([
+                new ClipboardItem({
+                  'image/png': blob
+                })
+              ]);
+              setShowAlert(true);
+            } else {
+              // Alternativa para dispositivos que no soportan la API del portapapeles
+              const imgUrl = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.href = imgUrl;
+              link.download = `qr-${nombre}.png`;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              URL.revokeObjectURL(imgUrl);
+              message.success('Imagen descargada');
+            }
           } catch (err) {
-            message.error('Error al copiar la imagen');
             console.error('Error al copiar:', err);
+            // Intentar descargar la imagen como alternativa
+            const imgUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = imgUrl;
+            link.download = `qr-${nombre}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(imgUrl);
+            message.success('Imagen descargada');
           }
         }
       }, 'image/png', 1.0);
@@ -194,13 +219,22 @@ export default function CopyImageQR({ userId, nombre, xs }: CopyImageQRProps) {
   };
 
   return (
-    <Button 
-      type="primary" 
-      icon={<CopyOutlined />} 
-      onClick={handleCopyToClipboard}
-      loading={isCopying}
-    >
-      {xs ? '' : 'Copiar como imagen'}
-    </Button>
+    <>
+      <Button 
+        type="primary" 
+        icon={<CopyOutlined />} 
+        onClick={handleCopyToClipboard}
+        loading={isCopying}
+      >
+        {xs ? '' : 'Copiar como imagen'}
+      </Button>
+      <NotificacionAlerta
+        mensaje="Imagen copiada exitosamente al portapapeles"
+        tipo="exito"
+        visible={showAlert}
+        onClose={() => setShowAlert(false)}
+        duracion={3000}
+      />
+    </>
   );
 }
