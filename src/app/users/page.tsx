@@ -34,8 +34,8 @@ interface Filtros {
   genero: string;
   status: string;
   grupo: string;
-  edadMin: number | null;
-  edadMax: number | null;
+  montoMin: number | null;
+  montoMax: number | null;
 }
 
 export default function UsersPage() {
@@ -62,8 +62,8 @@ export default function UsersPage() {
     genero: '',
     status: '',
     grupo: '',
-    edadMin: null,
-    edadMax: null
+    montoMin: null,
+    montoMax: null
   });
   
   // Estado para la paginación
@@ -105,12 +105,12 @@ export default function UsersPage() {
         params.append('grupo', filtros.grupo);
       }
       
-      if (filtros.edadMin !== null) {
-        params.append('edadMin', filtros.edadMin.toString());
+      if (filtros.montoMin !== null) {
+        params.append('montoMin', filtros.montoMin.toString());
       }
       
-      if (filtros.edadMax !== null) {
-        params.append('edadMax', filtros.edadMax.toString());
+      if (filtros.montoMax !== null) {
+        params.append('montoMax', filtros.montoMax.toString());
       }
       
       const response = await fetch(`/api/usuarios?${params.toString()}`);
@@ -174,8 +174,8 @@ export default function UsersPage() {
       genero: values.genero || '',
       status: values.status || '',
       grupo: values.grupo || '',
-      edadMin: Array.isArray(values.edad) ? values.edad[0] : null,
-      edadMax: Array.isArray(values.edad) ? values.edad[1] : null
+      montoMin: Array.isArray(values.monto_pago) ? values.monto_pago[0] : null,
+      montoMax: Array.isArray(values.monto_pago) ? values.monto_pago[1] : null
     }));
     
     // Resetear a la primera página cuando se aplican filtros
@@ -192,8 +192,8 @@ export default function UsersPage() {
       genero: '',
       status: '',
       grupo: '',
-      edadMin: null,
-      edadMax: null
+      montoMin: null,
+      montoMax: null
     });
     
     // Resetear a la primera página
@@ -479,10 +479,10 @@ export default function UsersPage() {
       );
     }
     
-    if (filtros.edadMin !== null || filtros.edadMax !== null) {
+    if (filtros.montoMin !== null || filtros.montoMax !== null) {
       tags.push(
-        <Tag key="edad" closable onClose={() => setFiltros(prev => ({ ...prev, edadMin: null, edadMax: null }))}>
-          Edad: {filtros.edadMin || 0} - {filtros.edadMax || 100}
+        <Tag key="monto" closable onClose={() => setFiltros(prev => ({ ...prev, montoMin: null, montoMax: null }))}>
+          Monto: ${filtros.montoMin || 0} - ${filtros.montoMax || 100000}
         </Tag>
       );
     }
@@ -554,7 +554,7 @@ export default function UsersPage() {
                   genero: filtros.genero,
                   status: filtros.status,
                   grupo: filtros.grupo,
-                  edad: filtros.edadMin !== null && filtros.edadMax !== null ? [filtros.edadMin, filtros.edadMax] : undefined
+                  monto_pago: filtros.montoMin !== null && filtros.montoMax !== null ? [filtros.montoMin, filtros.montoMax] : undefined
                 }}
               >
                 <Row gutter={16}>
@@ -585,8 +585,14 @@ export default function UsersPage() {
                     </Form.Item>
                   </Col>
                   <Col span={8}>
-                    <Form.Item name="edad" label="Rango de edad">
-                      <Slider range min={0} max={100} />
+                    <Form.Item name="monto_pago" label="Rango de monto pagado">
+                      <Slider 
+                        range 
+                        min={0} 
+                        max={100000} 
+                        step={1000}
+                        tipFormatter={value => `$${value}`}
+                      />
                     </Form.Item>
                   </Col>
                 </Row>

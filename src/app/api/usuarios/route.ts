@@ -11,8 +11,8 @@ export async function GET(request: NextRequest) {
     const genero = searchParams.get('genero') || '';
     const status = searchParams.get('status') || '';
     const grupo = searchParams.get('grupo') || '';
-    const edadMin = searchParams.get('edadMin') ? parseInt(searchParams.get('edadMin') || '0') : null;
-    const edadMax = searchParams.get('edadMax') ? parseInt(searchParams.get('edadMax') || '100') : null;
+    const montoMin = searchParams.get('montoMin') ? parseInt(searchParams.get('montoMin') || '0') : null;
+    const montoMax = searchParams.get('montoMax') ? parseInt(searchParams.get('montoMax') || '100000') : null;
     
     // Calcular el rango para Supabase
     const from = (page - 1) * pageSize;
@@ -38,12 +38,12 @@ export async function GET(request: NextRequest) {
       query = query.eq('grupo', grupo);
     }
     
-    if (edadMin !== null) {
-      query = query.gte('edad', edadMin);
+    if (montoMin !== null) {
+      query = query.gte('monto_pago', montoMin);
     }
     
-    if (edadMax !== null) {
-      query = query.lte('edad', edadMax);
+    if (montoMax !== null) {
+      query = query.lte('monto_pago', montoMax);
     }
     
     // Obtener el total de registros para calcular el total de páginas
@@ -76,12 +76,12 @@ export async function GET(request: NextRequest) {
       query = query.eq('grupo', grupo);
     }
     
-    if (edadMin !== null) {
-      query = query.gte('edad', edadMin);
+    if (montoMin !== null) {
+      query = query.gte('monto_pago', montoMin);
     }
     
-    if (edadMax !== null) {
-      query = query.lte('edad', edadMax);
+    if (montoMax !== null) {
+      query = query.lte('monto_pago', montoMax);
     }
     
     // Obtener los datos paginados
